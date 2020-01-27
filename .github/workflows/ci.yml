@@ -10,6 +10,10 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: autopep8
+      id: autopep8
       uses: peter-evans/autopep8@v1.2.0
       with:
-        args: -r --in-place .
+        args: --exit-code --diff --in-place .
+    - name: Fail if autopep8 made changes
+      if: steps.autopep8.exitcode == 2
+      run: exit 1 
