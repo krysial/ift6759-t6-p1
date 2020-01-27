@@ -1,5 +1,6 @@
 # Copied from https://github.com/mila-iqia/ift6759/blob/master/projects/project1/utils.py
-# Modifications in line 227 and 228: replaced 'at' with 'loc' and None value if no 't'
+# Modifications in line 227 and 228: replaced 'at' with 'loc' and None
+# value if no 't'
 import datetime
 import json
 import math
@@ -85,19 +86,24 @@ def compress_array(
             array = np.expand_dims(array, axis=2)
         assert array.dtype == np.uint8 or array.dtype == np.uint16, "jp2 compression requires uint8/16 array"
         if os.getenv("OPENCV_IO_ENABLE_JASPER") is None:
-            # for local/trusted use only; see issue here: https://github.com/opencv/opencv/issues/14058
+            # for local/trusted use only; see issue here:
+            # https://github.com/opencv/opencv/issues/14058
             os.environ["OPENCV_IO_ENABLE_JASPER"] = "1"
         retval, buffer = cv.imencode(".jp2", array)
         assert retval, "JPEG2000 encoding failed"
         return buffer.tobytes()
     # could also add uint16 png/tiff via opencv...
     if compr_type == "auto":
-        # we cheat for auto-decompression by prefixing the strategy in the bytecode
-        if array.ndim == 2 or (array.ndim == 3 and (array.shape[2] == 1 or array.shape[2] == 3)):
+        # we cheat for auto-decompression by prefixing the strategy in the
+        # bytecode
+        if array.ndim == 2 or (array.ndim == 3 and (
+                array.shape[2] == 1 or array.shape[2] == 3)):
             if array.dtype == np.uint8:
-                return b"uint8+jpg" + compress_array(array, compr_type="uint8+jpg")
+                return b"uint8+jpg" + \
+                    compress_array(array, compr_type="uint8+jpg")
             if array.dtype == np.uint16:
-                return b"uint16+jp2" + compress_array(array, compr_type="uint16+jp2")
+                return b"uint16+jp2" + \
+                    compress_array(array, compr_type="uint16+jp2")
         return b"lz4" + compress_array(array, compr_type="lz4")
 
 
@@ -116,8 +122,8 @@ def decompress_array(
     """
     compr_types = ["lz4", "float16+lz4",
                    "uint8+jpg", "uint8+jp2", "uint16+jp2"]
-    assert compr_type is None or compr_type in compr_types or compr_type in ["", "auto"], \
-        f"unrecognized compression strategy '{compr_type}'"
+    assert compr_type is None or compr_type in compr_types or compr_type in [
+        "", "auto"], f"unrecognized compression strategy '{compr_type}'"
     assert isinstance(
         buffer, bytes) or buffer.dtype == np.uint8, "invalid raw data buffer type"
     if isinstance(buffer, np.ndarray):
@@ -131,7 +137,8 @@ def decompress_array(
             buffer, dtype=np.uint8), flags=cv.IMREAD_UNCHANGED)
     if compr_type.endswith("+jp2"):
         if os.getenv("OPENCV_IO_ENABLE_JASPER") is None:
-            # for local/trusted use only; see issue here: https://github.com/opencv/opencv/issues/14058
+            # for local/trusted use only; see issue here:
+            # https://github.com/opencv/opencv/issues/14058
             os.environ["OPENCV_IO_ENABLE_JASPER"] = "1"
         buffer = cv.imdecode(np.frombuffer(
             buffer, dtype=np.uint8), flags=cv.IMREAD_UNCHANGED)
@@ -139,8 +146,8 @@ def decompress_array(
         decompr_buffer = None
         for compr_code in compr_types:
             if buffer.startswith(compr_code.encode("ascii")):
-                decompr_buffer = decompress_array(buffer[len(compr_code):], compr_type=compr_code,
-                                                  dtype=dtype, shape=shape)
+                decompr_buffer = decompress_array(
+                    buffer[len(compr_code):], compr_type=compr_code, dtype=dtype, shape=shape)
                 break
         assert decompr_buffer is not None, "missing auto-decompression code in buffer"
         buffer = decompr_buffer
@@ -175,7 +182,8 @@ def fetch_hdf5_sample(
             return None  # unavailable
     dataset = reader[dataset_name]
     if "compr_type" not in dataset.attrs:
-        # must have been compressed directly (or as a scalar); return raw output
+        # must have been compressed directly (or as a scalar); return raw
+        # output
         return dataset[sample_idx]
     compr_type, orig_dtype, orig_shape = dataset.attrs["compr_type"], None, None
     if "orig_dtype" in dataset.attrs:
@@ -184,19 +192,28 @@ def fetch_hdf5_sample(
         orig_shape = dataset.attrs["orig_shape"]
     if "force_cvt_uint8" in dataset.attrs and dataset.attrs["force_cvt_uint8"]:
         array = decompress_array(
-            dataset[sample_idx], compr_type=compr_type, dtype=np.uint8, shape=orig_shape)
+            dataset[sample_idx],
+            compr_type=compr_type,
+            dtype=np.uint8,
+            shape=orig_shape)
         orig_min, orig_max = dataset.attrs["orig_min"], dataset.attrs["orig_max"]
         array = ((array.astype(np.float32) / 255) *
                  (orig_max - orig_min) + orig_min).astype(orig_dtype)
     elif "force_cvt_uint16" in dataset.attrs and dataset.attrs["force_cvt_uint16"]:
         array = decompress_array(
-            dataset[sample_idx], compr_type=compr_type, dtype=np.uint16, shape=orig_shape)
+            dataset[sample_idx],
+            compr_type=compr_type,
+            dtype=np.uint16,
+            shape=orig_shape)
         orig_min, orig_max = dataset.attrs["orig_min"], dataset.attrs["orig_max"]
         array = ((array.astype(np.float32) / 65535) *
                  (orig_max - orig_min) + orig_min).astype(orig_dtype)
     else:
         array = decompress_array(
-            dataset[sample_idx], compr_type=compr_type, dtype=orig_dtype, shape=orig_shape)
+            dataset[sample_idx],
+            compr_type=compr_type,
+            dtype=orig_dtype,
+            shape=orig_shape)
     return array
 
 
@@ -220,22 +237,35 @@ def viz_hdf5_imagery(
         archive_lut_size = global_end_idx - global_start_idx
         global_start_time = datetime.datetime.strptime(
             h5_data.attrs["global_dataframe_start_time"], "%Y.%m.%d.%H%M")
-        lut_timestamps = [global_start_time + idx *
-                          datetime.timedelta(minutes=15) for idx in range(archive_lut_size)]
+        lut_timestamps = [
+            global_start_time +
+            idx *
+            datetime.timedelta(
+                minutes=15) for idx in range(archive_lut_size)]
         # will only display GHI values if dataframe is available
         stations_data = {}
         if stations:
             df = pd.read_pickle(dataframe_path) if dataframe_path else None
-            # assume lats/lons stay identical throughout all frames; just pick the first available arrays
+            # assume lats/lons stay identical throughout all frames; just pick
+            # the first available arrays
             idx, lats, lons = 0, None, None
             while (lats is None or lons is None) and idx < archive_lut_size:
                 lats, lons = fetch_hdf5_sample(
-                    "lat", h5_data, idx), fetch_hdf5_sample("lon", h5_data, idx)
+                    "lat", h5_data, idx), fetch_hdf5_sample(
+                    "lon", h5_data, idx)
                 idx = idx + 1
             assert lats is not None and lons is not None, "could not fetch lats/lons arrays (hdf5 might be empty)"
-            for reg, coords in tqdm.tqdm(stations.items(), desc="preparing stations data"):
+            for reg, coords in tqdm.tqdm(
+                    stations.items(), desc="preparing stations data"):
                 station_coords = (
-                    np.argmin(np.abs(lats - coords[0])), np.argmin(np.abs(lons - coords[1])))
+                    np.argmin(
+                        np.abs(
+                            lats -
+                            coords[0])),
+                    np.argmin(
+                        np.abs(
+                            lons -
+                            coords[1])))
                 station_data = {"coords": station_coords}
                 if dataframe_path:
                     station_data["ghi"] = [df.loc[t, reg + "_GHI"]
@@ -245,7 +275,8 @@ def viz_hdf5_imagery(
                 stations_data[reg] = station_data
         raw_data = np.zeros((archive_lut_size, len(
             channels), 650, 1500, 3), dtype=np.uint8)
-        for channel_idx, channel_name in tqdm.tqdm(enumerate(channels), desc="preparing img data", total=len(channels)):
+        for channel_idx, channel_name in tqdm.tqdm(
+                enumerate(channels), desc="preparing img data", total=len(channels)):
             assert channel_name in h5_data, f"missing channel: {channels}"
             norm_min = h5_data[channel_name].attrs.get("orig_min", None)
             norm_max = h5_data[channel_name].attrs.get("orig_max", None)
@@ -257,17 +288,26 @@ def viz_hdf5_imagery(
             for array_idx, array in enumerate(channel_data):
                 if array is None:
                     if copy_last_if_missing and last_valid_array_idx is not None:
-                        raw_data[array_idx, channel_idx, :,
-                                 :] = raw_data[last_valid_array_idx, channel_idx, :, :]
+                        raw_data[array_idx,
+                                 channel_idx,
+                                 :,
+                                 :] = raw_data[last_valid_array_idx,
+                                               channel_idx,
+                                               :,
+                                               :]
                     continue
                 array = (((array.astype(np.float32) - norm_min) /
                           (norm_max - norm_min)) * 255).astype(np.uint8)
                 array = cv.applyColorMap(array, cv.COLORMAP_BONE)
-                for station_idx, (station_name, station) in enumerate(stations_data.items()):
+                for station_idx, (station_name, station) in enumerate(
+                        stations_data.items()):
                     station_color = get_label_color_mapping(
                         station_idx + 1).tolist()[::-1]
-                    array = cv.circle(
-                        array, station["coords"][::-1], radius=9, color=station_color, thickness=-1)
+                    array = cv.circle(array,
+                                      station["coords"][::-1],
+                                      radius=9,
+                                      color=station_color,
+                                      thickness=-1)
                 raw_data[array_idx, channel_idx, :, :] = cv.flip(array, 0)
                 last_valid_array_idx = array_idx
     plot_data = None
@@ -281,7 +321,9 @@ def viz_hdf5_imagery(
         )
         assert plot_data.shape[0] == archive_lut_size
     display_data = []
-    for array_idx in tqdm.tqdm(range(archive_lut_size), desc="reshaping for final display"):
+    for array_idx in tqdm.tqdm(
+            range(archive_lut_size),
+            desc="reshaping for final display"):
         display = cv.vconcat([raw_data[array_idx, ch_idx, ...]
                               for ch_idx in range(len(channels))])
         while any([s > 1200 for s in display.shape]):
@@ -322,9 +364,18 @@ def preplot_live_ghi_curves(
     fig_size, fig_dpi, plot_row_count = (
         8, 6), 160, int(math.ceil(len(stations) / 2))
     plot_data = np.zeros(
-        (plot_count, fig_size[0] * fig_dpi, fig_size[1] * fig_dpi, 3), dtype=np.uint8)
-    fig = plt.figure(
-        num="ghi", figsize=fig_size[::-1], dpi=fig_dpi, facecolor="w", edgecolor="k")
+        (plot_count,
+         fig_size[0] *
+         fig_dpi,
+         fig_size[1] *
+         fig_dpi,
+         3),
+        dtype=np.uint8)
+    fig = plt.figure(num="ghi",
+                     figsize=fig_size[::-1],
+                     dpi=fig_dpi,
+                     facecolor="w",
+                     edgecolor="k")
     ax = fig.subplots(nrows=plot_row_count, ncols=2,
                       sharex="all", sharey="all")
     art_handles, art_labels = [], []
@@ -343,8 +394,10 @@ def preplot_live_ghi_curves(
             station_color=get_label_html_color_code(station_idx + 1),
             current_time=window_start
         )
-        for handle, lbl in zip(*ax[plot_row_idx, plot_col_idx].get_legend_handles_labels()):
-            # skipping over the duplicate labels messes up the legend, we must live with the warning
+        for handle, lbl in zip(
+                *ax[plot_row_idx, plot_col_idx].get_legend_handles_labels()):
+            # skipping over the duplicate labels messes up the legend, we must
+            # live with the warning
             art_labels.append(
                 "_" + lbl if lbl in art_labels or lbl == "current" else lbl)
             art_handles.append(handle)
@@ -367,8 +420,8 @@ def preplot_live_ghi_curves(
                     handle.set_data([curr_time, curr_time], [0, 1])
                     subax.draw_artist(handle)
             fig.canvas.blit(subax.bbox)
-        plot_data[idx, ...] = np.reshape(np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8),
-                                         (*(fig.canvas.get_width_height()[::-1]), 3))[..., ::-1]
+        plot_data[idx, ...] = np.reshape(np.frombuffer(fig.canvas.tostring_rgb(
+        ), dtype=np.uint8), (*(fig.canvas.get_width_height()[::-1]), 3))[..., ::-1]
     return plot_data
 
 
@@ -411,7 +464,9 @@ def plot_ghi_curves(
         ax.plot(xrange_real, station_ghi,
                 linestyle="solid", label=station_name)
     datetime_range = pd.date_range(
-        window_start + horiz_offset, window_end + horiz_offset, freq=sample_step)
+        window_start + horiz_offset,
+        window_end + horiz_offset,
+        freq=sample_step)
     xrange_offset = matplotlib.dates.date2num(
         [d.to_pydatetime() for d in datetime_range])
     if pred_ghi is not None:
@@ -522,7 +577,8 @@ def viz_predictions(
         start_bound) == 0, "invalid start bound (should land at first index)"
     assert len(dataframe.index.intersection(target_datetimes)) == len(target_datetimes), \
         "bad dataframe target datetimes overlap, index values are missing"
-    # we will display 24-hour slices with some overlap (configured via hard-coded param below)
+    # we will display 24-hour slices with some overlap (configured via
+    # hard-coded param below)
     time_window, time_overlap, time_sample = \
         datetime.timedelta(hours=24), datetime.timedelta(
             hours=3), datetime.timedelta(minutes=15)
@@ -534,16 +590,23 @@ def viz_predictions(
         stations), sample_count), fill_value=float("nan"), dtype=np.float32)
     station_ghi_data = np.full((day_count, len(
         stations), sample_count), fill_value=float("nan"), dtype=np.float32)
-    pred_ghi_data = np.full((day_count, len(
-        stations), pred_horiz, sample_count), fill_value=float("nan"), dtype=np.float32)
+    pred_ghi_data = np.full(
+        (day_count,
+         len(stations),
+            pred_horiz,
+            sample_count),
+        fill_value=float("nan"),
+        dtype=np.float32)
     days_range = pd.date_range(
         start_bound, end_bound, freq=time_window, closed="left")
-    for day_idx, day_start in enumerate(tqdm.tqdm(days_range, desc="preparing daytime GHI intervals")):
+    for day_idx, day_start in enumerate(
+            tqdm.tqdm(days_range, desc="preparing daytime GHI intervals")):
         window_start, window_end = day_start - \
             time_overlap, day_start + time_window + time_overlap
         sample_start, sample_end = (
             window_start - start_bound) // time_sample, (window_end - start_bound) // time_sample
-        for sample_iter_idx, sample_idx in enumerate(range(sample_start, sample_end + 1)):
+        for sample_iter_idx, sample_idx in enumerate(
+                range(sample_start, sample_end + 1)):
             if sample_idx < 0 or sample_idx >= len(dataframe.index):
                 continue
             sample_row = dataframe.iloc[sample_idx]
@@ -556,10 +619,14 @@ def viz_predictions(
                 station_ghi_data[day_idx, station_idx,
                                  sample_iter_idx] = sample_row[station_name + "_GHI"]
                 if target_iter_idx is not None:
-                    pred_ghi_data[day_idx, station_idx, :,
-                                  sample_iter_idx] = predictions[station_idx, target_iter_idx]
+                    pred_ghi_data[day_idx,
+                                  station_idx,
+                                  :,
+                                  sample_iter_idx] = predictions[station_idx,
+                                                                 target_iter_idx]
     displays = []
-    for day_idx, day_start in enumerate(tqdm.tqdm(days_range, desc="preparing plots")):
+    for day_idx, day_start in enumerate(
+            tqdm.tqdm(days_range, desc="preparing plots")):
         displays.append(draw_daily_ghi(
             clearsky_ghi=clearsky_ghi_data[day_idx],
             station_ghi=station_ghi_data[day_idx],
