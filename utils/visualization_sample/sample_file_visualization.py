@@ -1,9 +1,8 @@
-from utils import utils
-
 import json
 import os
 import sys
 sys.path.append('../')
+import utils
 
 DATA_FOLDER = '/project/cq-training-1/project1/data/'
 CATALOG_PATH = os.path.join(
