@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 
-def get_ghi_targets(df, datetimes, station, offsets=[0,1,3,6]):
+def get_ghi_targets(df, datetimes, station, offsets=[0, 1, 3, 6]):
     """
     Get a station's GHI measurements for a list of datetimes and offsets.
 
@@ -27,8 +27,8 @@ def get_ghi_targets(df, datetimes, station, offsets=[0,1,3,6]):
             t = dt + timedelta(hours=offset)
             # Get GHI value at time "t"
             try:
-                targets[i,j] = df.loc[t][f'{station}_GHI']
-            except:
+                targets[i, j] = df.loc[t][f'{station}_GHI']
+            except KeyError:
                 pass
-    
+
     return targets
