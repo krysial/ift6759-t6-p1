@@ -20,3 +20,7 @@ jobs:
         use-isort: false
         # Extra options: pycodestyle $(extra-pycodestyle-options) $(python-root-list)
         extra-pycodestyle-options: --ignore=E501,W504
+    - name: GitHub Action for pytest
+      uses: cclauss/GitHub-Action-for-pytest@0.5.0
+      with:
+        args: pytest -s tests
