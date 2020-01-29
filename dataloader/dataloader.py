@@ -17,23 +17,22 @@ def prepare_dataloader(
         target_time_offsets: typing.List[datetime.timedelta],
         config: typing.Dict[typing.AnyStr, typing.Any],
         target_stations: typing.Dict[typing.AnyStr, typing.Tuple[float, float, float]],) -> tf.data.Dataset:
+    """
+    A function to prepare the dataloader
 
-"""
-A function to prepare the dataloader
+    Args:
+        dataframe: a pandas dataframe that provides the netCDF file path (or HDF5 file path and offset).
+        batch_of_datetimes: a batch of timestamps that is required by the data loader to provide targets for the model.
+        station: a map of station names of interest paired with their coordinates (latitude, longitude, elevation).
+        target_time_offsets: the list of timedeltas to predict GHIs for (by definition: [T=0, T+1h, T+3h, T+6h]).
+        config: configuration dictionary holding any extra parameters that might be required for tuning purposes.
+        target_stations: A dictionary of all target stations with respective coordinates and elevation
 
-Args:
-    dataframe: a pandas dataframe that provides the netCDF file path (or HDF5 file path and offset).
-    batch_of_datetimes: a batch of timestamps that is required by the data loader to provide targets for the model.
-    station: a map of station names of interest paired with their coordinates (latitude, longitude, elevation).
-    target_time_offsets: the list of timedeltas to predict GHIs for (by definition: [T=0, T+1h, T+3h, T+6h]).
-    config: configuration dictionary holding any extra parameters that might be required for tuning purposes.
-    target_stations: A dictionary of all target stations with respective coordinates and elevation
-
-Returns:
-    data_loader: A ``tf.data.Dataset`` object that can be used to produce input tensors for your model. One tensor
-        must correspond to one sequence of past imagery data. The tensors must be generated in the order given
-        by ``target_sequences``. The shape of the tf.data.Dataset should be ([None, temporal_seq, 5, crop_size, crop_size], [None, 4])
-"""
+    Returns:
+        data_loader: A ``tf.data.Dataset`` object that can be used to produce input tensors for your model. One tensor
+           must correspond to one sequence of past imagery data. The tensors must be generated in the order given
+           by ``target_sequences``. The shape of the tf.data.Dataset should be ([None, temporal_seq, 5, crop_size, crop_size], [None, 4])
+    """
 
 
 def create_data_generator(
@@ -43,17 +42,17 @@ def create_data_generator(
         target_time_offsets: typing.List[datetime.timedelta],
         config: typing.Dict[typing.AnyStr, typing.Any],):
     """
-   A function to create a generator to yield data to the dataloader
-   """
+    A function to create a generator to yield data to the dataloader
+    """
 
     for i in range(0, len(target_datetimes), batch_size):
-        batch_of_datetimes = target_datetimes[i:i+batch_size]
+        batch_of_datetimes = target_datetimes[i:i + batch_size]
         targets = get_GHI_targets(
             dataframe, batch_of_datetimes, station, target_time_offsets, config)
         images = get_raw_images(dataframe, batch_of_datetimes, config)
         yield images, targets
 
-    if config['crop_size'] == None:
+    if config['crop_size'] is None:
         config['crop_size'] = get_crop_frame_size(dataframe, target_stations)
 
     generator = create_data_generator(
