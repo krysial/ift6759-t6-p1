@@ -2,7 +2,7 @@ import json
 import os
 import sys
 sys.path.append('../')
-import utils
+import utils  # noqa
 
 DATA_FOLDER = '/project/cq-training-1/project1/data/'
 CATALOG_PATH = os.path.join(
