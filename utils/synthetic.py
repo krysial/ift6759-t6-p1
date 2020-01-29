@@ -8,3 +8,17 @@ def get_images():
 
 def create_data_generator():
     pass
+
+
+def get_random_trajectory(batch_size, seq_len, crop_size):
+    frame_size = crop_size ** 2
+
+
+class SyntheticMNISTDataload(object):
+    """
+    """
+
+    def __init__(self, opts):
+        super().__init__()
+
+        self.batch_size = opts.seq_len
