@@ -8,7 +8,7 @@ def get_station_px_center(
 
     Args:
         dataframe: a pandas dataframe that provides the netCDF file path (or HDF5 file path and offset).
-        target_stations: A dictionary of all target stations with respective coordinates and elevation 
+        target_stations: A dictionary of all target stations with respective coordinates and elevation
 
     Returns:
         stations_px: A ``dict`` of station names as keys and their pixel coordinates as values
