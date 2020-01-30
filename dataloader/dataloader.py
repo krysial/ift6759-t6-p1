@@ -7,9 +7,8 @@ import typing
 
 from get_GHI_targets import get_GHI_targets
 from get_raw_images import get_raw_images
-from get_crop_frame_size import get_crop_frame_size
 from get_station_px_center import get_station_px_center
-from crop_size import crop_size
+from get_crop_size import get_crop_size
 
 def prepare_dataloader(
         dataframe: pd.DataFrame,
@@ -61,6 +60,6 @@ def prepare_dataloader(
     # Second step: Estimate/Calculate station coordinates on image and crop area dimensions
     stations_px, L, B = get_station_px_center(dataframe, target_stations)
     if config['crop_size'] is None:
-        config['crop_size'] = crop_size(stations_px, L, B)
+        config['crop_size'] = get_crop_size(stations_px, L, B)
 
     return data_loader
