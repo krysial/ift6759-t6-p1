@@ -52,14 +52,15 @@ def prepare_dataloader(
             images = get_raw_images(dataframe, batch_of_datetimes, config)
             yield images, targets
 
-    stations_px, L, B = get_station_px_center(dataframe, target_stations)
-
-    if config['crop_size'] is None:
-        config['crop_size'] = crop_size(stations_px, L, B)
-
+    # First step in the data loading pipeline: A generator object to retrieve a inputs resources and their targets
     generator = create_data_generator(
         dataframe, target_datetimes, station, target_time_offsets, config)
     data_loader = tf.data.Dataset.from_generator(
         generator, (tf.float32, tf.float32))
+
+    # Second step: Estimate/Calculate station coordinates on image and crop area dimensions
+    stations_px, L, B = get_station_px_center(dataframe, target_stations)
+    if config['crop_size'] is None:
+        config['crop_size'] = crop_size(stations_px, L, B)
 
     return data_loader
