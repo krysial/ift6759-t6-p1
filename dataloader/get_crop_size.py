@@ -1,6 +1,6 @@
 
 
-def crop_size(
+def get_crop_size(
         stations_px: typing.Dict[typing.AnyStr, typing.Tuple[float, float]],
         L: int, B: int,) -> int:
     """
