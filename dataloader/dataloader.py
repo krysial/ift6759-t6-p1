@@ -34,23 +34,22 @@ def prepare_dataloader(
            by ``target_sequences``. The shape of the tf.data.Dataset should be ([None, temporal_seq, 5, crop_size, crop_size], [None, 4])
     """
 
+    def create_data_generator(
+            dataframe: pd.DataFrame,
+            target_datetimes: typing.List[datetime.datetime],
+            station: typing.Dict[typing.AnyStr, typing.Tuple[float, float, float]],
+            target_time_offsets: typing.List[datetime.timedelta],
+            config: typing.Dict[typing.AnyStr, typing.Any],):
+        """
+        A function to create a generator to yield data to the dataloader
+        """
 
-def create_data_generator(
-        dataframe: pd.DataFrame,
-        target_datetimes: typing.List[datetime.datetime],
-        station: typing.Dict[typing.AnyStr, typing.Tuple[float, float, float]],
-        target_time_offsets: typing.List[datetime.timedelta],
-        config: typing.Dict[typing.AnyStr, typing.Any],):
-    """
-    A function to create a generator to yield data to the dataloader
-    """
-
-    for i in range(0, len(target_datetimes), config['batch_size']):
-        batch_of_datetimes = target_datetimes[i:i + config['batch_size']]
-        targets = get_GHI_targets(
-            dataframe, batch_of_datetimes, station, target_time_offsets, config)
-        images = get_raw_images(dataframe, batch_of_datetimes, config)
-        yield images, targets
+        for i in range(0, len(target_datetimes), config['batch_size']):
+            batch_of_datetimes = target_datetimes[i:i + config['batch_size']]
+            targets = get_GHI_targets(
+                dataframe, batch_of_datetimes, station, target_time_offsets, config)
+            images = get_raw_images(dataframe, batch_of_datetimes, config)
+            yield images, targets
 
     if config['crop_size'] is None:
         config['crop_size'] = get_crop_frame_size(dataframe, target_stations)
