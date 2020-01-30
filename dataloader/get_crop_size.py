@@ -8,7 +8,7 @@ def get_crop_size(
     there are no overlaps and is a valid crop for all stations.
 
     Args:
-        stations: a map of station names with their pixel coordinates on image.
+        stations_px: a map of station names with their pixel coordinates on image.
         L: length dimension of image
         B: bredth dimension of image
 
