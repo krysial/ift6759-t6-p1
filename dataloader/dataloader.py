@@ -45,8 +45,8 @@ def create_data_generator(
     A function to create a generator to yield data to the dataloader
     """
 
-    for i in range(0, len(target_datetimes), batch_size):
-        batch_of_datetimes = target_datetimes[i:i + batch_size]
+    for i in range(0, len(target_datetimes), config['batch_size']):
+        batch_of_datetimes = target_datetimes[i:i + config['batch_size']]
         targets = get_GHI_targets(
             dataframe, batch_of_datetimes, station, target_time_offsets, config)
         images = get_raw_images(dataframe, batch_of_datetimes, config)
