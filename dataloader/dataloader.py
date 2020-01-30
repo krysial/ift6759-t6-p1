@@ -8,7 +8,8 @@ import typing
 from get_GHI_targets import get_GHI_targets
 from get_raw_images import get_raw_images
 from get_crop_frame_size import get_crop_frame_size
-
+from get_station_px_center import get_station_px_center
+from crop_size import crop_size
 
 def prepare_dataloader(
         dataframe: pd.DataFrame,
@@ -51,8 +52,10 @@ def prepare_dataloader(
             images = get_raw_images(dataframe, batch_of_datetimes, config)
             yield images, targets
 
+    stations_px, L, B = get_station_px_center(dataframe, target_stations)
+
     if config['crop_size'] is None:
-        config['crop_size'] = get_crop_frame_size(dataframe, target_stations)
+        config['crop_size'] = crop_size(stations_px, L, B)
 
     generator = create_data_generator(
         dataframe, target_datetimes, station, target_time_offsets, config)
