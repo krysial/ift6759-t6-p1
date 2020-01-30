@@ -3,12 +3,14 @@ import numpy as np
 import tensorflow as tf
 import tqdm
 import datetime
+import functools
 import typing
 
 from get_GHI_targets import get_GHI_targets
 from get_raw_images import get_raw_images
 from get_station_px_center import get_station_px_center
 from get_crop_size import get_crop_size
+from dataset_processing import dataset_processing
 
 def prepare_dataloader(
         dataframe: pd.DataFrame,
@@ -62,4 +64,8 @@ def prepare_dataloader(
     if config['crop_size'] is None:
         config['crop_size'] = get_crop_size(stations_px, L, B)
 
+    # Third step: Processing using map (cropping for stations)
+    data_loader = data_loader.map(functools.partial(dataset_processing, stations_px = stations_px, station = station, config = config))
+
+    # Final step of data loading pipeline: Return the dataset loading object
     return data_loader
