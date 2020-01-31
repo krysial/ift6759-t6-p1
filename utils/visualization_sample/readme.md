@@ -4,9 +4,9 @@
 To execute the visualization:
 > source ~/ift6759-env/bin/activate
 
-> cd /code/utils/sample
+> cd /code/utils/visualization_sample 
 
->python sample_file_visualization.py
+> python sample_file_visualization.py
 
 
 
