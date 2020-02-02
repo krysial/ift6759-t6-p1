@@ -1,17 +1,21 @@
-import pandas as pd
-import json
-import numpy as np
-
 import typing
 import datetime as dt
+import json
+
+import pandas as pd
+import numpy as np
 import h5py
 import matplotlib.pyplot as plt
 
 from utils import utils
 
-image_height = 650
-image_width = 1500
-dt_format = '%Y-%m-%dT%H:%M:%S'
+IMAGE_HEIGHT = 650
+IMAGE_WIDTH = 1500
+DT_FORMAT = '%Y-%m-%dT%H:%M:%S'
+GOES13_DS = {
+    'hdf516': ['hdf5_16bit_path', 'hdf5_16bit_offset'],
+    'hdf508': ['hdf5_8bit_path', 'hdf5_8bit_offset']
+}
 
 
 def get_raw_images(
@@ -33,11 +37,10 @@ def get_raw_images(
 
     channels = config['channels']
     seqs = config['no_of_temporal_seq']
-    datetimes = [dt.datetime.strptime(i, dt_format) for i in datetimes]
-    goes13_i_paths = get_frames_location(catalog, datetimes, seqs)
+    goes13_i_paths = get_frames_location(dataframe, datetimes, seqs, config['goes13_dataset'])
     frames = fetch_frames(goes13_i_paths, channels, seqs)
 
-    assert frames.shape == (len(datetimes), seqs, len(channels), image_height, image_width)
+    assert frames.shape == (len(datetimes), seqs, len(channels), IMAGE_HEIGHT, IMAGE_WIDTH)
     return frames
 
 # auxiliary functions
@@ -49,48 +52,63 @@ def read_conf_file(path):
     return config
 
 
-def get_frames_location(catalog, datetimes, seqs):
+def get_frames_location(dataframe, datetimes, seqs, dataset):
     # what to do when no frame for specific datetime (when no path?)?
-    # what to do when no past dataframes entries e.g very beginning of the catalog???
-    columns = ['hdf5_16bit_path', 'hdf5_16bit_offset']
+    # what to do when no past dataframes entries e.g very beginning of the images???
+
+    columns = GOES13_DS[dataset] if dataset else 'hdf516'
     offset = 15
-    output = []
+    dt_seqs = []
 
-    for datetime in datetimes:
-        output.append(catalog.loc[[datetime - dt.timedelta(minutes=(offset * i)) for i in range(seqs)], columns])
+    for i, datetime in enumerate(datetimes):
+        for j in range(seqs):
+            dt_seqs.append({
+                'datetime': datetime - dt.timedelta(minutes=(offset * j)),
+                'position': (i, j)
+            })
 
-    return output
+    df = pd.DataFrame(dt_seqs)
+    df['path'] = dataframe.loc[df['datetime']][columns[0]].to_list()
+    df['offset'] = dataframe.loc[df['datetime']][columns[1]].to_list()
+
+    return df
 
 
-def fetch_frames(images_path, channels, seqs):
-    # should we scale images ?
-    # TODO: v2 -> update to read same frames' files only once
-    output = np.empty((len(images_path), seqs, len(channels), image_height, image_width))
+def fetch_frames(frames_df, channels, seqs):
+    # should scale images ?
+    # what to do when no frame data available: None result in all nans (line 91)
+    output = np.empty((frames_df.shape[0] // seqs, seqs, len(channels), IMAGE_HEIGHT, IMAGE_WIDTH))
 
-    for i, seq_catalog in enumerate(images_path):
-        for j, (path, frame) in enumerate(zip(seq_catalog.iloc[:, 0], seq_catalog.iloc[:, 1])):
-            with h5py.File(path, "r") as h5_data:
-                for k, channel in enumerate(channels):
+    paths_groups = frames_df.groupby('path', sort=False)
+
+    for name, group in paths_groups:
+        with h5py.File(name, "r") as h5_data:
+            for index, row in group.iterrows():
+                position = row['position']
+                frame = row['offset']
+                for c, channel in enumerate(channels):
                     channel_idx_data = utils.fetch_hdf5_sample(channel, h5_data, frame)
-                    assert channel_idx_data is None or channel_idx_data.shape == (image_height, image_width), \
+                    assert channel_idx_data is None or channel_idx_data.shape == (IMAGE_HEIGHT, IMAGE_WIDTH), \
                         "the channels had an unexpected dimension"
-                    output[i][j][k] = channel_idx_data
+                    output[position[0], position[1], c] = channel_idx_data
 
     return output
 
 
 def show_frame(image):
-    assert image.shape == (image_height, image_width), 'Unexpected frame shape'
+    assert image.shape == (IMAGE_HEIGHT, IMAGE_WIDTH), 'Unexpected frame shape'
     fig, ax = plt.subplots(1)
     ax.imshow(image, cmap='bone')
     plt.show()
 
 
-if __name__ == "__main__":
+def _main():
+    # expected usage
     app_config = {
-        "no_of_temporal_seq": 2,
+        "no_of_temporal_seq": 5,
         "dataframe_path": "/project/cq-training-1/project1/data/dummy_test_catalog.pkl",
         "channels": ["ch1", "ch2", "ch3", "ch4", "ch6"],
+        "goes13_dataset": 'hdf516',
         "target_datetimes": [
             "2015-01-01T12:45:00",
             "2015-01-01T19:00:00",
@@ -98,11 +116,17 @@ if __name__ == "__main__":
             "2015-01-02T19:45:00"
         ]
     }
-    DATAFRAME_PATH = app_config['dataframe_path']
-    catalog = pd.read_pickle(DATAFRAME_PATH)
-    batch_of_datetimes = app_config['target_datetimes']
+    dataframe_path = app_config['dataframe_path']
+    catalog = pd.read_pickle(dataframe_path)
+    batch_of_datetimes = [dt.datetime.strptime(i, DT_FORMAT) for i in app_config['target_datetimes']]
 
     raw_images = get_raw_images(catalog, batch_of_datetimes, app_config)
 
-    show_frame(raw_images[1, 1, 0])
+    for i in range(app_config["no_of_temporal_seq"]):
+        show_frame(raw_images[1, i, 0])
+
     print('Done!')
+
+
+if __name__ == "__main__":
+    _main()
