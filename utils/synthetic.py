@@ -1,4 +1,9 @@
 from collections import namedtuple
+import os
+import sys
+import h5py
+
+dirname = os.path.dirname(__file__)
 
 
 def get_ghi_target():
@@ -19,24 +24,79 @@ def get_random_trajectory(batch_size, seq_len, crop_size):
 
 Options = namedtuple(
     'SyntheticMNISTGeneratorOptions',
-    'batch_size seq_len'
+    [
+        'batch_size',
+        'seq_len'
+    ]
 )
 
 
-class SyntheticMNISTGenerator(object):
+class SyntheticMNIST(object):
+    def __init__(self):
+        pass
+
+
+def syntheticMNISTGenerator(opts):
     """
-    A class that prepares synthetic data for the models. They are a multi layer
-    moving MNIST characters that bounce off the edges of the images.
+    A generator that prepares synthetic data for the models.
+    They are a multi layer moving MNIST characters that
+    bounce off the edges of the images.
 
     Args:
         opts: protobuf that contains the options of the synthetic data
     """
+    try:
+        f = h5py.File(
+            os.path.abspath(os.path.join(dirname, '../data/mnist.h5'))
+            )
+    except Exception:
+        print('Please set the correct path to MNIST dataset')
+        sys.exit()
 
-    def __init__(self, opts):
-        super().__init__()
+    def getRandomTrajectory(self, batch_size):
+        length = self.seq_length_
+        canvas_size = self.image_size_ - self.digit_size_
 
-        self.batch_size = opts.batch_size
-        self.seq_len = opts.seq_len
+        # Initial position uniform random inside the box.
+        y = np.random.rand(batch_size)
+        x = np.random.rand(batch_size)
 
-    def __iter__(self):
-        pass
+        # Choose a random velocity.
+        theta = np.random.rand(batch_size) * 2 * np.pi
+        v_y = np.sin(theta)
+        v_x = np.cos(theta)
+
+        start_y = np.zeros((length, batch_size))
+        start_x = np.zeros((length, batch_size))
+        for i in xrange(length):
+            # Take a step along velocity.
+            y += v_y * self.step_length_
+            x += v_x * self.step_length_
+
+        # Bounce off edges.
+        for j in xrange(batch_size):
+            if x[j] <= 0:
+                x[j] = 0
+                v_x[j] = -v_x[j]
+            if x[j] >= 1.0:
+                x[j] = 1.0
+                v_x[j] = -v_x[j]
+            if y[j] <= 0:
+                y[j] = 0
+                v_y[j] = -v_y[j]
+            if y[j] >= 1.0:
+                y[j] = 1.0
+                v_y[j] = -v_y[j]
+        start_y[i, :] = y
+        start_x[i, :] = x
+
+        # Scale to the size of the canvas.
+        start_y = (canvas_size * start_y).astype(np.int32)
+        start_x = (canvas_size * start_x).astype(np.int32)
+    return start_y, start_x
+
+    def generator():
+        while True:
+            yield 0
+
+    return generator
