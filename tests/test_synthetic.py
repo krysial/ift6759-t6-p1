@@ -4,7 +4,7 @@ import tensorflow as tf
 from utils.synthetic import syntheticMNISTGenerator, Options
 
 
-opts = Options(100, 12)
+opts = Options(100, 12, 12, 12)
 
 
 @pytest.fixture

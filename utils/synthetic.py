@@ -26,6 +26,8 @@ Options = namedtuple(
     'SyntheticMNISTGeneratorOptions',
     [
         'batch_size',
+        'image_size',
+        'digit_size',
         'seq_len'
     ]
 )
@@ -47,15 +49,18 @@ def syntheticMNISTGenerator(opts):
     """
     try:
         f = h5py.File(
-            os.path.abspath(os.path.join(dirname, '../data/mnist.h5'))
+            os.path.abspath(
+                os.path.join(dirname, '../data/mnist.h5')
             )
+        )
     except Exception:
         print('Please set the correct path to MNIST dataset')
         sys.exit()
 
-    def getRandomTrajectory(self, batch_size):
-        length = self.seq_length_
-        canvas_size = self.image_size_ - self.digit_size_
+    def getRandomTrajectory():
+        batch_size = opts.batch_size
+        length = opts.seq_len
+        canvas_size = opts.image_size - opts.digit_size
 
         # Initial position uniform random inside the box.
         y = np.random.rand(batch_size)
@@ -70,30 +75,30 @@ def syntheticMNISTGenerator(opts):
         start_x = np.zeros((length, batch_size))
         for i in xrange(length):
             # Take a step along velocity.
-            y += v_y * self.step_length_
-            x += v_x * self.step_length_
+            y += v_y * length
+            x += v_x * length
 
-        # Bounce off edges.
-        for j in xrange(batch_size):
-            if x[j] <= 0:
-                x[j] = 0
-                v_x[j] = -v_x[j]
-            if x[j] >= 1.0:
-                x[j] = 1.0
-                v_x[j] = -v_x[j]
-            if y[j] <= 0:
-                y[j] = 0
-                v_y[j] = -v_y[j]
-            if y[j] >= 1.0:
-                y[j] = 1.0
-                v_y[j] = -v_y[j]
-        start_y[i, :] = y
-        start_x[i, :] = x
+            # Bounce off edges.
+            for j in xrange(batch_size):
+                if x[j] <= 0:
+                    x[j] = 0
+                    v_x[j] = -v_x[j]
+                if x[j] >= 1.0:
+                    x[j] = 1.0
+                    v_x[j] = -v_x[j]
+                if y[j] <= 0:
+                    y[j] = 0
+                    v_y[j] = -v_y[j]
+                if y[j] >= 1.0:
+                    y[j] = 1.0
+                    v_y[j] = -v_y[j]
+            start_y[i, :] = y
+            start_x[i, :] = x
 
         # Scale to the size of the canvas.
         start_y = (canvas_size * start_y).astype(np.int32)
         start_x = (canvas_size * start_x).astype(np.int32)
-    return start_y, start_x
+        return start_y, start_x
 
     def generator():
         while True:
