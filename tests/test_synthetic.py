@@ -5,7 +5,13 @@ from utils.synthetic import create_mnist_generator, Options
 
 tf.executing_eagerly()
 
-opts = Options(50, 28, 5, 12)
+opts = Options(
+    image_size=300,
+    digit_size=28,
+    num_channels=5,
+    seq_len=12,
+    step_size=0.5
+)
 
 
 @pytest.fixture

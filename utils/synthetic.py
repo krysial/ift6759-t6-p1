@@ -19,7 +19,8 @@ Options = namedtuple(
         'image_size',
         'digit_size',
         'num_channels',
-        'seq_len'
+        'seq_len',
+        'step_size'
     ]
 )
 
@@ -51,40 +52,42 @@ class SyntheticMNISTGenerator(object):
 
     def getRandomTrajectory(self):
         length = self.opts.seq_len
+        num_channels = self.opts.num_channels
         canvas_size = self.opts.image_size - self.opts.digit_size
+        step_size = self.opts.step_size
 
         # Initial position uniform random inside the box.
-        y = np.random.rand()
-        x = np.random.rand()
+        y = np.random.rand(num_channels)
+        x = np.random.rand(num_channels)
 
         # Choose a random velocity.
-        theta = np.random.rand() * 2 * np.pi
+        theta = np.random.rand(num_channels) * 2 * np.pi
         v_y = np.sin(theta)
         v_x = np.cos(theta)
 
-        start_y = np.zeros((length))
-        start_x = np.zeros((length))
+        start_y = np.zeros((length, num_channels))
+        start_x = np.zeros((length, num_channels))
         for i in range(length):
             # Take a step along velocity.
-            y += v_y * length
-            x += v_x * length
+            y += v_y * step_size
+            x += v_x * step_size
 
             # Bounce off edges.
-            if x <= 0:
-                x = 0
-                v_x = -v_x
-            if x >= 1.0:
-                x = 1.0
-                v_x = -v_x
-            if y <= 0:
-                y = 0
-                v_y = -v_y
-            if y >= 1.0:
-                y = 1.0
-                v_y = -v_y
-
-            start_y[i] = y
-            start_x[i] = x
+            for j in range(num_channels):
+                if x[j] <= 0:
+                    x[j] = 0
+                    v_x[j] = -v_x[j]
+                if x[j] >= 1.0:
+                    x[j] = 1.0
+                    v_x[j] = -v_x[j]
+                if y[j] <= 0:
+                    y[j] = 0
+                    v_y[j] = -v_y[j]
+                if y[j] >= 1.0:
+                    y[j] = 1.0
+                    v_y[j] = -v_y[j]
+            start_y[i, :] = y
+            start_x[i, :] = x
 
         # Scale to the size of the canvas.
         start_y = (canvas_size * start_y).astype(np.int32)
@@ -100,6 +103,7 @@ class SyntheticMNISTGenerator(object):
 
         data = np.zeros(
             (
+                self.opts.num_channels,
                 self.opts.seq_len,
                 self.opts.image_size,
                 self.opts.image_size
@@ -118,16 +122,13 @@ class SyntheticMNISTGenerator(object):
 
             # generate video
             for i in range(self.opts.seq_len):
-                top = start_y[i]
-                left = start_x[i]
+                top = start_y[i, n]
+                left = start_x[i, n]
                 bottom = top + self.opts.digit_size
                 right = left + self.opts.digit_size
-                data[i, top:bottom, left:right] = self.overlap(
-                    data[i, top:bottom, left:right],
-                    digit_image
-                )
+                data[n, i, top:bottom, left:right] = digit_image
 
-        return data.reshape(-1)
+        return data.reshape(self.opts.num_channels, -1)
 
     def next(self):
         return self.video(), 3.0
