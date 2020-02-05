@@ -35,7 +35,7 @@ class SyntheticMNISTGenerator(object):
                     os.path.join(dirname, '../data/mnist.h5')
                 )
             )
-            self.data_ = f['train']['inputs'].value.reshape(-1, 28, 28)
+            self.data_ = f['train']['inputs'][()].reshape(-1, 28, 28)
             f.close()
             self.indices_ = np.arange(self.data_.shape[0])
             self.row_ = 0
@@ -132,12 +132,10 @@ class SyntheticMNISTGenerator(object):
                         digit_image
                     )
 
-        return data.reshape(self.opts.batch_size, -1), None
+        return data.reshape(self.opts.batch_size, -1)
 
     def next(self):
-        self.batch()
-
-        return (1.0, 3.0)
+        return self.batch(), 3.0
 
 
 def create_mnist_generator(opts):
