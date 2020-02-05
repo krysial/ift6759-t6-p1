@@ -53,8 +53,6 @@ def read_conf_file(path):
 
 
 def get_frames_location(dataframe, datetimes, seqs, dataset):
-    # what to do when no frame for specific datetime (when no path?)?
-    # what to do when no past dataframes entries e.g very beginning of the images???
 
     columns = GOES13_DS[dataset] if dataset else 'hdf516'
     offset = 15
@@ -75,8 +73,6 @@ def get_frames_location(dataframe, datetimes, seqs, dataset):
 
 
 def fetch_frames(frames_df, channels, seqs):
-    # should scale images ?
-    # what to do when no frame data available: None result in all nans (line 91)
     output = np.empty((frames_df.shape[0] // seqs, seqs, len(channels), IMAGE_HEIGHT, IMAGE_WIDTH))
 
     paths_groups = frames_df.groupby('path', sort=False)
@@ -88,8 +84,8 @@ def fetch_frames(frames_df, channels, seqs):
                 frame = row['offset']
                 for c, channel in enumerate(channels):
                     channel_idx_data = utils.fetch_hdf5_sample(channel, h5_data, frame)
-                    assert channel_idx_data is None or channel_idx_data.shape == (IMAGE_HEIGHT, IMAGE_WIDTH), \
-                        "the channels had an unexpected dimension"
+                    if channel_idx_data is None or channel_idx_data.shape != (IMAGE_HEIGHT, IMAGE_WIDTH):
+                        channel_idx_data = 0
                     output[position[0], position[1], c] = channel_idx_data
 
     return output
