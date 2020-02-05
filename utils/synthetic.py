@@ -16,10 +16,9 @@ dirname = os.path.dirname(__file__)
 Options = namedtuple(
     'SyntheticMNISTGeneratorOptions',
     [
-        'batch_size',
         'image_size',
         'digit_size',
-        'num_digits',
+        'num_channels',
         'seq_len'
     ]
 )
@@ -51,42 +50,41 @@ class SyntheticMNISTGenerator(object):
         return self.next()
 
     def getRandomTrajectory(self):
-        batch_size = self.opts.batch_size
         length = self.opts.seq_len
         canvas_size = self.opts.image_size - self.opts.digit_size
 
         # Initial position uniform random inside the box.
-        y = np.random.rand(batch_size)
-        x = np.random.rand(batch_size)
+        y = np.random.rand()
+        x = np.random.rand()
 
         # Choose a random velocity.
-        theta = np.random.rand(batch_size) * 2 * np.pi
+        theta = np.random.rand() * 2 * np.pi
         v_y = np.sin(theta)
         v_x = np.cos(theta)
 
-        start_y = np.zeros((length, batch_size))
-        start_x = np.zeros((length, batch_size))
+        start_y = np.zeros((length))
+        start_x = np.zeros((length))
         for i in range(length):
             # Take a step along velocity.
             y += v_y * length
             x += v_x * length
 
             # Bounce off edges.
-            for j in range(batch_size):
-                if x[j] <= 0:
-                    x[j] = 0
-                    v_x[j] = -v_x[j]
-                if x[j] >= 1.0:
-                    x[j] = 1.0
-                    v_x[j] = -v_x[j]
-                if y[j] <= 0:
-                    y[j] = 0
-                    v_y[j] = -v_y[j]
-                if y[j] >= 1.0:
-                    y[j] = 1.0
-                    v_y[j] = -v_y[j]
-            start_y[i, :] = y
-            start_x[i, :] = x
+            if x <= 0:
+                x = 0
+                v_x = -v_x
+            if x >= 1.0:
+                x = 1.0
+                v_x = -v_x
+            if y <= 0:
+                y = 0
+                v_y = -v_y
+            if y >= 1.0:
+                y = 1.0
+                v_y = -v_y
+
+            start_y[i] = y
+            start_x[i] = x
 
         # Scale to the size of the canvas.
         start_y = (canvas_size * start_y).astype(np.int32)
@@ -97,13 +95,11 @@ class SyntheticMNISTGenerator(object):
         """ Put b on top of a."""
         return np.maximum(a, b)
 
-    def batch(self):
+    def video(self):
         start_y, start_x = self.getRandomTrajectory()
 
-        # minibatch data
         data = np.zeros(
             (
-                self.opts.batch_size,
                 self.opts.seq_len,
                 self.opts.image_size,
                 self.opts.image_size
@@ -111,31 +107,30 @@ class SyntheticMNISTGenerator(object):
             dtype=np.float32
         )
 
-        for j in range(self.opts.batch_size):
-            for n in range(self.opts.num_digits):
-                # get random digit from dataset
-                ind = self.indices_[self.row_]
-                self.row_ += 1
-                if self.row_ == self.data_.shape[0]:
-                    self.row_ = 0
-                    np.random.shuffle(self.indices_)
-                digit_image = self.data_[ind, :, :]
+        for n in range(self.opts.num_channels):
+            # get random digit from dataset
+            ind = self.indices_[self.row_]
+            self.row_ += 1
+            if self.row_ == self.data_.shape[0]:
+                self.row_ = 0
+                np.random.shuffle(self.indices_)
+            digit_image = self.data_[ind, :, :]
 
-                # generate video
-                for i in range(self.opts.seq_len):
-                    top = start_y[i, j]
-                    left = start_x[i, j]
-                    bottom = top + self.opts.digit_size
-                    right = left + self.opts.digit_size
-                    data[j, i, top:bottom, left:right] = self.overlap(
-                        data[j, i, top:bottom, left:right],
-                        digit_image
-                    )
+            # generate video
+            for i in range(self.opts.seq_len):
+                top = start_y[i]
+                left = start_x[i]
+                bottom = top + self.opts.digit_size
+                right = left + self.opts.digit_size
+                data[i, top:bottom, left:right] = self.overlap(
+                    data[i, top:bottom, left:right],
+                    digit_image
+                )
 
-        return data.reshape(self.opts.batch_size, -1)
+        return data.reshape(-1)
 
     def next(self):
-        return self.batch(), 3.0
+        return self.video(), 3.0
 
 
 def create_mnist_generator(opts):

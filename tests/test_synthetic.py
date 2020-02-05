@@ -5,7 +5,7 @@ from utils.synthetic import create_mnist_generator, Options
 
 tf.executing_eagerly()
 
-opts = Options(100, 50, 28, 12, 5)
+opts = Options(50, 28, 5, 12)
 
 
 @pytest.fixture
