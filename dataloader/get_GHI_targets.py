@@ -6,11 +6,11 @@ import pandas as pd
 
 
 def get_GHI_targets(
-    df: pd.DataFrame,
-    datetimes: typing.List[datetime],
-    station: typing.Dict[typing.AnyStr, typing.Tuple[float, float, float]],
-    offsets: typing.List[timedelta],
-    config: typing.Dict[typing.AnyStr, typing.Any]) -> np.ndarray:
+        df: pd.DataFrame,
+        datetimes: typing.List[datetime],
+        station: typing.Dict[typing.AnyStr, typing.Tuple[float, float, float]],
+        offsets: typing.List[timedelta],
+        config: typing.Dict[typing.AnyStr, typing.Any]) -> np.ndarray:
     """
     Get a station's GHI measurements for a list of datetimes and offsets.
 
