@@ -1,9 +1,9 @@
 import typing
 import numpy as np
-
+import tensorflow as tf
 
 def get_crop_size(
-        stations_px: typing.Dict[typing.AnyStr, typing.Tuple[float, float]],
+        stations_px: typing.Dict[typing.AnyStr, typing.Tuple[int, int]],
         data_loader: tf.data.Dataset,) -> int:
     """
     A function to find the best/smallest square crop frame size. It finds a crop size such that
@@ -15,8 +15,20 @@ def get_crop_size(
         An ``int`` value which can be used to define the square crop frame side length.
     """
 
-    # station coordinates
+    def get_L_B(data_loader: tf.data.Dataset,) -> typing.Tuple[int, int]:
+        """
+        A util function to extract and return image dimensions from data_loader
+        """
+
+        for data in data_loader:
+            image, target = data
+            break
+        L,B = image.shape[-2:]
+        return L, B
+
+    # station coordinates and image dimensions
     coordinates = np.array(list(stations_px.values()))[:, :2]
+    L, B = get_L_B(data_loader)
 
     # coordinates of edge points nearest to the stations along the edges
     l_min = [0, coordinates[coordinates[:, 0].argmin()][1]]
