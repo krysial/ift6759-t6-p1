@@ -1,5 +1,6 @@
 import pytest
 import tensorflow as tf
+import numpy as np
 
 from utils.synthetic import create_mnist_generator, Options
 
@@ -41,3 +42,5 @@ def test_datasetloader(create_generator):
 
     assert tf.debugging.is_numeric_tensor(image)
     assert tf.debugging.is_numeric_tensor(ghi)
+
+    assert image.numpy().shape == (5, 12, 300, 300)

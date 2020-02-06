@@ -128,7 +128,7 @@ class SyntheticMNISTGenerator(object):
                 right = left + self.opts.digit_size
                 data[n, i, top:bottom, left:right] = digit_image
 
-        return data.reshape(self.opts.num_channels, -1)
+        return data
 
     def next(self):
         return self.video(), 3.0
