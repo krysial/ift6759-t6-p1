@@ -4,13 +4,6 @@ import sys
 import h5py
 import numpy as np
 
-try:
-    import pydevd
-    DEBUGGING = True
-except ImportError:
-    DEBUGGING = False
-
-
 dirname = os.path.dirname(__file__)
 
 Options = namedtuple(
@@ -131,26 +124,4 @@ class SyntheticMNISTGenerator(object):
         return data
 
     def next(self):
-        return self.video(), 3.0
-
-
-def create_mnist_generator(opts):
-    """
-    A generator that prepares synthetic data for the models.
-    They are a multi layer moving MNIST characters that
-    bounce off the edges of the images.
-
-    Args:
-        opts: protobuf that contains the options of the synthetic data,
-        see SyntheticMNISTGeneratorOptions for options
-    """
-    def create_generator():
-        # This is needed to allow debugging
-        # tf.data.dataset iterates in a separate C thread
-        # preventing the debugger to be called.
-        if DEBUGGING:
-            pydevd.settrace(suspend=False)
-
-        return SyntheticMNISTGenerator(opts)
-
-    return create_generator
+        return self.video()
