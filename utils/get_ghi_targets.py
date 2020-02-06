@@ -43,3 +43,27 @@ def get_ghi_targets(
                 pass
 
     return targets
+
+# Example usage
+if __name__ == '__main__':
+    # Get metadata dataframe
+    df = pd.read_pickle('/project/cq-training-1/project1/data/catalog.helios.public.20100101-20160101.pkl')
+
+    # Convert list of datetime strings into datetime objects
+    datetimes = ["2015-01-01T12:45:00", "2015-01-01T19:00:00"]
+    datetimes = [datetime.strptime(x, '%Y-%m-%dT%H:%M:%S') for x in datetimes]
+
+    # Dictionary with one entry for station of interest
+    station = {'DRA': (0,0,0)}
+
+    # Convert list of offset strings into timedelta objects
+    offsets = ["P0DT0H0M0S", "P0DT1H0M0S", "P0DT3H0M0S", "P0DT6H0M0S"]
+    offsets = [timedelta(hours=int(x[4])) for x in offsets]
+
+    # Configuration dictionary (currently unused)
+    config = {}
+
+    # Call function and print results
+    targets = get_ghi_targets(df, datetimes, station, offsets, config)
+    print(targets)
+    
