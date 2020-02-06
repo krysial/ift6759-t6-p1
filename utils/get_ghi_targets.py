@@ -37,10 +37,14 @@ def get_ghi_targets(
             # Get target time with offset
             t = dt + offset
             # Get GHI value at time "t"
+            # If GHI is an invalid type or does not exist, pass
             try:
-                targets[i, j] = df.loc[t][f'{station}_GHI']
-            except KeyError:
+                ghi = df.loc[t][f'{station}_GHI']
+                assert isinstance(ghi, np.float64)
+            except (AssertionError, KeyError):
                 pass
+            else:
+                targets[i, j] = ghi
 
     return targets
 
