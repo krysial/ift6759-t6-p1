@@ -10,8 +10,7 @@ def get_GHI_targets(
     datetimes: typing.List[datetime],
     station: typing.Dict[typing.AnyStr, typing.Tuple[float, float, float]],
     offsets: typing.List[timedelta],
-    config: typing.Dict[typing.AnyStr, typing.Any]
-    ) -> np.ndarray:
+    config: typing.Dict[typing.AnyStr, typing.Any]) -> np.ndarray:
     """
     Get a station's GHI measurements for a list of datetimes and offsets.
 
@@ -48,6 +47,7 @@ def get_GHI_targets(
 
     return targets
 
+
 # Example usage
 if __name__ == '__main__':
     # Get metadata dataframe
@@ -58,7 +58,7 @@ if __name__ == '__main__':
     datetimes = [datetime.strptime(x, '%Y-%m-%dT%H:%M:%S') for x in datetimes]
 
     # Dictionary with one entry for station of interest
-    station = {'DRA': (0,0,0)}
+    station = {'DRA': (0, 0, 0)}
 
     # Convert list of offset strings into timedelta objects
     offsets = ["P0DT0H0M0S", "P0DT1H0M0S", "P0DT3H0M0S", "P0DT6H0M0S"]
@@ -70,4 +70,3 @@ if __name__ == '__main__':
     # Call function and print results
     targets = get_GHI_targets(df, datetimes, station, offsets, config)
     print(targets)
-    
