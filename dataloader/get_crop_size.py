@@ -2,6 +2,7 @@ import typing
 import numpy as np
 import tensorflow as tf
 
+
 def get_crop_size(
         stations_px: typing.Dict[typing.AnyStr, typing.Tuple[int, int]],
         data_loader: tf.data.Dataset,) -> int:
@@ -23,7 +24,7 @@ def get_crop_size(
         for data in data_loader:
             image, target = data
             break
-        L,B = image.shape[-2:]
+        L, B = image.shape[-2:]
         return L, B
 
     # station coordinates and image dimensions
