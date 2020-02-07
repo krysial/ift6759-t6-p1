@@ -11,7 +11,10 @@ opts = Options(
     digit_size=28,
     num_channels=5,
     seq_len=12,
-    step_size=0.5
+    step_size=0.5,
+    lat=32.2,
+    lon=-111,
+    alt=700
 )
 
 
@@ -53,3 +56,8 @@ def test_datasetloader_ghi(create_generator):
     )
 
     assert data_loader is not None
+
+    _, ghi = next(iter(data_loader))
+
+    assert ghi is not None
+    assert ghi == 65

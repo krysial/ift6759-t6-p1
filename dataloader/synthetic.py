@@ -20,7 +20,10 @@ Options = namedtuple(
         'digit_size',
         'num_channels',
         'seq_len',
-        'step_size'
+        'step_size',
+        'lat',
+        'lon',
+        'alt'
     ]
 )
 
@@ -51,6 +54,9 @@ def create_synthetic_generator(opts):
         )
 
         ghi_opts = SyntheticGHIProcessorOptions(
+            opts.lat,
+            opts.lon,
+            opts.alt
         )
 
         for seq, ghi in map(
