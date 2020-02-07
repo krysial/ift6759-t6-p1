@@ -55,15 +55,15 @@ def prepare_dataloader(
             yield images, targets
 
     # First step in the data loading pipeline: A generator object to retrieve a inputs resources and their targets
-    generator = create_data_generator(
-        dataframe, target_datetimes, station, target_time_offsets, config)
+    generator = functools.partial(create_data_generator,
+                                  dataframe=dataframe, target_datetimes=target_datetimes, station=station, target_time_offsets=target_time_offsets, config=config)
     data_loader = tf.data.Dataset.from_generator(
         generator, (tf.float32, tf.float32))
 
     # Second step: Estimate/Calculate station coordinates on image and crop area dimensions
-    stations_px, L, B = get_station_px_center(dataframe, target_stations)
+    stations_px = get_station_px_center(dataframe, target_stations)
     if config['crop_size'] is None:
-        config['crop_size'] = get_crop_size(stations_px, L, B)
+        config['crop_size'] = get_crop_size(stations_px, data_loader)
 
     # Third step: Processing using map (cropping for stations)
     data_loader = data_loader.map(functools.partial(dataset_processing, stations_px=stations_px, station=station, config=config))
