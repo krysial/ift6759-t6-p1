@@ -20,4 +20,21 @@ def dataset_processing(
         target_tensor_: target tensor after processing operation.
     """
 
+    # A list stacking processed tensor for each required station given in 'station'
+    image_tensor_ = []
+    for keys in station:
+        center = stations_px[keys]
+        px_offset = config['crop_size'] // 2
+        px_x_ = center[0] - px_offset
+        px_x = center[0] + px_offset
+        px_y_ = center[1] - px_offset
+        px_y = center[1] + px_offset
+        image_tensor_.append(image_tensor[:, :, :, px_x_:px_x, px_y_:px_y])
+
+    # Updated image tensor: Concatenating along the stacking axis
+    image_tensor_ = tf.concat(image_tensor_, axis=0)
+
+    # Updated target tensor
+    target_tensor_ = target_tensor
+
     return image_tensor_, target_tensor_
