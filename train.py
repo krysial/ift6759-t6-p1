@@ -4,6 +4,10 @@ import datetime
 import argparse
 import typing
 import pandas as pd
+import tensorflow as tf
+
+from tensorflow.keras.optimizers import Adam, RMSprop
+
 from models import models
 from dataloader.dataloader import prepare_dataloader
 from models import prepare_model
@@ -38,6 +42,7 @@ def main(
     target_stations = admin_config["stations"]
     target_time_offsets = [pd.Timedelta(d).to_pytimedelta() for d in admin_config["target_time_offsets"]]
     stations = {config.station: target_stations[config.station]}
+
     data_loader = prepare_dataloader(
         dataframe,
         target_datetimes,
@@ -46,11 +51,30 @@ def main(
         config,
         target_stations
     )
+
+    dataset = data_loader \
+        .repeat(config.dataset_size) \
+        .batch(config.batch_size)
+
     model = prepare_model(
         stations,
         target_time_offsets,
         config
     )
+
+    optimizer = Adam(lr=1e-5, decay=1e-6)
+
+    model.compile(
+        loss='categorical_crossentropy',
+        optimizer=optimizer
+    )
+    model.fit_generator(
+        dataset,
+        epochs=config.epoch,
+        steps_per_epoch=config.dataset_size / config.batch_size
+    )
+
+    print(model.summary())
 
 
 if __name__ == "__main__":
@@ -71,7 +95,19 @@ if __name__ == "__main__":
         "--crop-size",
         type=int,
         help="size of the crop frame",
-        default=0
+        default=60
+    )
+    parser.add_argument(
+        "--epoch",
+        type=int,
+        help="epoch count",
+        default=10
+    )
+    parser.add_argument(
+        "--dataset-size",
+        type=int,
+        help="dataset size",
+        default=100000
     )
     parser.add_argument(
         "--seq-len",
