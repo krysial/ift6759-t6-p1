@@ -60,6 +60,7 @@ def main(
     )
 
     dataset = data_loader \
+        .prefetch(tf.data.experimental.AUTOTUNE) \
         .batch(config.batch_size)
 
     model = prepare_model(

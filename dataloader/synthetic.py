@@ -13,6 +13,8 @@ try:
 except ImportError:
     DEBUGGING = False
 
+import time
+
 Options = namedtuple(
     'SyntheticGeneratorOptions',
     [
@@ -38,7 +40,7 @@ def create_synthetic_generator(opts):
         opts: protobuf that contains the options of the synthetic data,
         see SyntheticMNISTGeneratorOptions for options
     """
-    def create_generator():
+    def create_generator(dataset_size=1000):
         # This is needed to allow debugging
         # tf.data.dataset iterates in a separate C thread
         # preventing the debugger to be called.
@@ -59,10 +61,19 @@ def create_synthetic_generator(opts):
             opts.alt
         )
 
-        for seq, ghi in map(
-            lambda data: (data, SyntheticGHIProcessor(ghi_opts).processData(data)),
-            SyntheticMNISTGenerator(mnist_opts)
-        ):
-            yield seq, ghi
+        ghi_processor = SyntheticGHIProcessor(ghi_opts)
+        mnist_generator = SyntheticMNISTGenerator(mnist_opts)
+
+        for i, (seq, ghi) in enumerate(map(
+            lambda data: (data, ghi_processor.processData(data)),
+            mnist_generator
+        )):
+            if DEBUGGING:
+                pydevd.settrace(suspend=False)
+
+            if i < dataset_size:
+                yield seq, ghi
+            else:
+                break
 
     return create_generator

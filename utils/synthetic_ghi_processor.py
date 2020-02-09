@@ -35,7 +35,9 @@ class SyntheticGHIProcessor(object):
         )
         self.cs = location.get_clearsky(times)
 
-    def processData(self, data):
+    def processData(self, _data):
+        data = _data[:, 1, :, :]
+
         if self.count < self.cs.shape[0]:
             ghi = self.cs['ghi'][self.count]
         else:
