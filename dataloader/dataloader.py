@@ -6,11 +6,12 @@ import datetime
 import functools
 import typing
 
-from get_GHI_targets import get_GHI_targets
-from get_raw_images import get_raw_images
-from get_station_px_center import get_station_px_center
-from get_crop_size import get_crop_size
-from dataset_processing import dataset_processing
+from dataloader.get_GHI_targets import get_GHI_targets
+from dataloader.get_raw_images import get_raw_images
+from dataloader.get_station_px_center import get_station_px_center
+from dataloader.get_crop_size import get_crop_size
+from dataloader.dataset_processing import dataset_processing
+from dataloader.synthetic import create_synthetic_generator, Options
 
 
 def prepare_dataloader(
@@ -40,33 +41,73 @@ def prepare_dataloader(
     def create_data_generator(
             dataframe: pd.DataFrame,
             target_datetimes: typing.List[datetime.datetime],
-            station: typing.Dict[typing.AnyStr, typing.Tuple[float, float, float]],
+            station: typing.Dict[
+                typing.AnyStr,
+                typing.Tuple[float, float, float]
+            ],
             target_time_offsets: typing.List[datetime.timedelta],
             config: typing.Dict[typing.AnyStr, typing.Any],):
         """
         A function to create a generator to yield data to the dataloader
         """
 
-        for i in range(0, len(target_datetimes), config['batch_size']):
+        for i in range(0, len(target_datetimes), config.batch_size):
             batch_of_datetimes = target_datetimes[i:i + config['batch_size']]
             targets = get_GHI_targets(
-                dataframe, batch_of_datetimes, station, target_time_offsets, config)
+                dataframe,
+                batch_of_datetimes,
+                station,
+                target_time_offsets,
+                config
+            )
             images = get_raw_images(dataframe, batch_of_datetimes, config)
             yield images, targets
 
-    # First step in the data loading pipeline: A generator object to retrieve a inputs resources and their targets
-    generator = functools.partial(create_data_generator,
-                                  dataframe=dataframe, target_datetimes=target_datetimes, station=station, target_time_offsets=target_time_offsets, config=config)
-    data_loader = tf.data.Dataset.from_generator(
-        generator, (tf.float32, tf.float32))
+    if config.synthetic_data:
+        opts = Options(
+            image_size=config.crop_size,
+            digit_size=28,
+            num_channels=len(config.channels),
+            seq_len=config.seq_len,
+            step_size=0.3,
+            lat=station[config.station][0],
+            lon=station[config.station][1],
+            alt=station[config.station][2]
+        )
+        generator = create_synthetic_generator(opts)
+        data_loader = tf.data.Dataset.from_generator(
+            generator, (tf.float32, tf.float32))
+    else:
+        # First step in the data loading pipeline:
+        # A generator object to retrieve a inputs resources and their targets
+        generator = functools.partial(
+            create_data_generator,
+            dataframe=dataframe,
+            target_datetimes=target_datetimes,
+            station=station,
+            target_time_offsets=target_time_offsets,
+            config=config
+        )
 
-    # Second step: Estimate/Calculate station coordinates on image and crop area dimensions
-    stations_px = get_station_px_center(dataframe, target_stations)
-    if config['crop_size'] is None:
-        config['crop_size'] = get_crop_size(stations_px, data_loader)
+        data_loader = tf.data.Dataset.from_generator(
+            generator, (tf.float32, tf.float32))
 
-    # Third step: Processing using map (cropping for stations)
-    data_loader = data_loader.map(functools.partial(dataset_processing, stations_px=stations_px, station=station, config=config))
+        # Second step: Estimate/Calculate station
+        # coordinates on image and crop area dimensions
+        stations_px = get_station_px_center(dataframe, target_stations)
+        if config.crop_size == 0:
+            # config.crop_size. = get_crop_size(stations_px, data_loader)
+            pass
+
+        # Third step: Processing using map (cropping for stations)
+        data_loader = data_loader.map(
+            functools.partial(
+                dataset_processing,
+                stations_px=stations_px,
+                station=station,
+                config=config
+            )
+        )
 
     # Final step of data loading pipeline: Return the dataset loading object
     return data_loader
