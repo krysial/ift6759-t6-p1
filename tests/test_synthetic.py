@@ -17,6 +17,8 @@ opts = Options(
     alt=700
 )
 
+np.random.seed(100)
+
 
 @pytest.fixture
 def create_generator():
@@ -60,4 +62,4 @@ def test_datasetloader_ghi(create_generator):
     _, ghi = next(iter(data_loader))
 
     assert ghi is not None
-    assert ghi == 53
+    assert ghi == 62
