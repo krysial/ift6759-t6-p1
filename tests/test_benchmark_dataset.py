@@ -53,7 +53,7 @@ def test_prefetch_synthetic_benchmark(create_generator):
     data_loader = tf.data.Dataset.from_generator(
         generator,
         (tf.int64, tf.int64),
-        args=[500],
+        args=[50],
     )
     b1 = benchmark(data_loader)
 
@@ -64,5 +64,5 @@ def test_prefetch_synthetic_benchmark(create_generator):
     ).prefetch(10)
     b2 = benchmark(data_loader_2)
 
-    assert b1 <= 0
-    assert b2 <= b1
+    assert b1 <= 18
+    assert b2 <= 0

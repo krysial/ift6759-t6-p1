@@ -13,7 +13,6 @@ try:
 except ImportError:
     DEBUGGING = False
 
-import time
 
 Options = namedtuple(
     'SyntheticGeneratorOptions',
