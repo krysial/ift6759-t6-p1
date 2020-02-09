@@ -143,7 +143,7 @@ if __name__ == "__main__":
         "--dataset-size",
         type=int,
         help="dataset size",
-        default=100000
+        default=10000
     )
     parser.add_argument(
         "--seq-len",
