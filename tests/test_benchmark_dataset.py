@@ -15,6 +15,8 @@ opts = Options(
     alt=700
 )
 
+tf.executing_eagerly()
+
 
 def benchmark(dataset, num_epochs=2):
     start_time = time.perf_counter()
@@ -33,6 +35,7 @@ def create_generator():
     return _create_generator
 
 
+@pytest.mark.performance
 def test_vanilla_synthetic_benchmark(create_generator):
     generator = create_generator()
     data_loader = tf.data.Dataset.from_generator(
@@ -44,6 +47,7 @@ def test_vanilla_synthetic_benchmark(create_generator):
     assert generator is not None
 
 
+@pytest.mark.performance
 def test_prefetch_synthetic_benchmark(create_generator):
     generator = create_generator()
     data_loader = tf.data.Dataset.from_generator(
@@ -60,5 +64,5 @@ def test_prefetch_synthetic_benchmark(create_generator):
     ).prefetch(10)
     b2 = benchmark(data_loader_2)
 
-    assert b1 <= 15
+    assert b1 <= 0
     assert b2 <= b1
