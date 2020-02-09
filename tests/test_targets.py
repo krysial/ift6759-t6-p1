@@ -10,7 +10,7 @@ from dataloader.get_GHI_targets import get_GHI_targets
 # Set arguments
 @pytest.fixture
 def df():
-    df_path = '/project/cq-training-1/project1/data/catalog.helios.public.20100101-20160101.pkl'
+    df_path = './data/dummy_test_catalog.pkl'
     return pd.read_pickle(df_path)
 
 
