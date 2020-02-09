@@ -47,6 +47,8 @@ class SyntheticGHIProcessor(object):
 
         self.count += 1
         solar_power = np.random.rand()
-        cloudness = 1 - (np.sum(data) / np.prod(data.shape))
+        cloudness = np.average(
+            solar_power * (1 - (np.sum(data, axis=0) / data.shape[0]))
+        )
 
         return ghi * cloudness
