@@ -4,13 +4,20 @@ import datetime
 import argparse
 import typing
 import pandas as pd
+import time
 import tensorflow as tf
 
 from tensorflow.keras.optimizers import Adam, RMSprop
+from tensorflow.keras.callbacks import TensorBoard,\
+    ModelCheckpoint, \
+    EarlyStopping, \
+    CSVLogger
 
 from models import models
 from dataloader.dataloader import prepare_dataloader
 from models import prepare_model
+
+print(tf.config.experimental.list_physical_devices('GPU'))
 
 
 def main(
@@ -53,7 +60,6 @@ def main(
     )
 
     dataset = data_loader \
-        .repeat(config.dataset_size) \
         .batch(config.batch_size)
 
     model = prepare_model(
@@ -65,12 +71,42 @@ def main(
     optimizer = Adam(lr=1e-5, decay=1e-6)
 
     model.compile(
-        loss='categorical_crossentropy',
+        loss='mean_squared_error',
         optimizer=optimizer
     )
+
+    checkpointer = ModelCheckpoint(
+        filepath=os.path.join(
+            'results',
+            'checkpoints',
+            config.model + '-' +
+            'synthetic' if config.synthetic_data else 'real' +
+            '.{epoch:03d}-{val_loss:.3f}.hdf5'
+        ),
+        verbose=1,
+        save_best_only=True
+    )
+
+    # Helper: TensorBoard
+    tb = TensorBoard(log_dir=os.path.join('results', 'logs', config.model))
+
+    # Helper: Stop when we stop learning.
+    early_stopper = EarlyStopping(patience=5)
+
+    # Helper: Save results.
+    timestamp = time.time()
+    csv_logger = CSVLogger(
+        os.path.join(
+            'results',
+            'logs',
+            config.model + '-' + 'training-' + str(timestamp) + '.log'
+        )
+    )
+
     model.fit_generator(
         dataset,
         epochs=config.epoch,
+        callbacks=[tb, early_stopper, csv_logger],
         steps_per_epoch=config.dataset_size / config.batch_size
     )
 

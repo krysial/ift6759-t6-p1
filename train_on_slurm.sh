@@ -6,7 +6,5 @@
 #SBATCH -o ./results/slurm-%A_%a.out # STDOUT
 
 module load python/3.7
-virtualenv --no-download $SLURM_TMPDIR/ift6759-env
-source $SLURM_TMPDIR/ift6759-env/bin/activate
-pip install --no-index --upgrade pip
-pip install -r requirements.txt
+source /project/cq-training-1/project1/teams/team06/ift6759-env/bin/activate
+python train.py data/admin_cfg.json
