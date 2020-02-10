@@ -59,7 +59,10 @@ def main(
         target_stations
     )
 
-    dataset = data_loader \
+    train_dataset = data_loader.take(int(0.7 * config.dataset_size)) \
+        .prefetch(tf.data.experimental.AUTOTUNE) \
+        .batch(config.batch_size)
+    valid_dataset = data_loader.skip(int(0.7 * config.dataset_size)) \
         .prefetch(tf.data.experimental.AUTOTUNE) \
         .batch(config.batch_size)
 
@@ -105,10 +108,10 @@ def main(
     )
 
     model.fit_generator(
-        dataset,
+        train_dataset,
         epochs=config.epoch,
         callbacks=[tb, early_stopper, csv_logger],
-        steps_per_epoch=config.dataset_size / config.batch_size
+        validation_data=valid_dataset
     )
 
     print(model.summary())
