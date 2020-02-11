@@ -72,7 +72,8 @@ def prepare_dataloader(
             step_size=0.3,
             lat=station[config.station][0],
             lon=station[config.station][1],
-            alt=station[config.station][2]
+            alt=station[config.station][2],
+            offsets=target_time_offsets
         )
         generator = create_synthetic_generator(opts)
         data_loader = tf.data.Dataset.from_generator(

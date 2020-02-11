@@ -92,7 +92,12 @@ def main(
     )
 
     # Helper: TensorBoard
-    tb = TensorBoard(log_dir=os.path.join('results', 'logs', config.model))
+    tb = TensorBoard(
+        log_dir=os.path.join('results', 'logs', config.model),
+        histogram_freq=1,
+        write_graph=True,
+        write_images=True
+    )
 
     # Helper: Stop when we stop learning.
     early_stopper = EarlyStopping(patience=5)
@@ -110,7 +115,7 @@ def main(
     model.fit_generator(
         train_dataset,
         epochs=config.epoch,
-        callbacks=[tb, early_stopper, csv_logger],
+        callbacks=[tb, early_stopper, csv_logger, checkpointer],
         validation_data=valid_dataset
     )
 
@@ -141,7 +146,7 @@ if __name__ == "__main__":
         "--epoch",
         type=int,
         help="epoch count",
-        default=10
+        default=20
     )
     parser.add_argument(
         "--dataset-size",
