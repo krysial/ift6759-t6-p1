@@ -12,7 +12,8 @@ opts = Options(
     step_size=0.5,
     lat=32.2,
     lon=-111,
-    alt=700
+    alt=700,
+    offsets=["P0DT0H0M0S", "P0DT1H0M0S", "P0DT3H0M0S", "P0DT6H0M0S"]
 )
 
 tf.executing_eagerly()
