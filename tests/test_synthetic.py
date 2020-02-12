@@ -47,7 +47,7 @@ def test_datasetloader_images(create_generator):
     image, _ = next(iter(data_loader))
 
     assert tf.debugging.is_numeric_tensor(image)
-    assert image.numpy().shape == (5, 12, 300, 300)
+    assert image.numpy().shape == (12, 300, 300, 5)
 
 
 def test_datasetloader_ghi(create_generator):
