@@ -51,7 +51,7 @@ def prepare_dataloader(
         A function to create a generator to yield data to the dataloader
         """
 
-        for i in range(0, len(target_datetimes), config.batch_size):
+        for i in range(0, len(target_datetimes), config['batch_size']):
             batch_of_datetimes = target_datetimes[i:i + config['batch_size']]
             targets = get_GHI_targets(
                 dataframe,
@@ -63,7 +63,7 @@ def prepare_dataloader(
             images = get_raw_images(dataframe, batch_of_datetimes, config)
             yield images, targets
 
-    if config.synthetic_data:
+    if not config.real:
         opts = Options(
             image_size=config.crop_size,
             digit_size=28,
@@ -82,13 +82,22 @@ def prepare_dataloader(
     else:
         # First step in the data loading pipeline:
         # A generator object to retrieve a inputs resources and their targets
+        config_dict = {}
+        config_dict['batch_size'] = config.batch_size
+        config_dict['channels'] = config.channels
+        config_dict['target_datetimes'] = target_datetimes
+        config_dict['goes13_dataset'] = 'hdf516'
+        config_dict['crop_size'] = config.crop_size
+        config_dict['no_of_temporal_seq'] = config.seq_len
+
+
         generator = functools.partial(
             create_data_generator,
             dataframe=dataframe,
             target_datetimes=target_datetimes,
             station=station,
             target_time_offsets=target_time_offsets,
-            config=config
+            config=config_dict
         )
 
         data_loader = tf.data.Dataset.from_generator(
@@ -98,8 +107,7 @@ def prepare_dataloader(
         # coordinates on image and crop area dimensions
         stations_px = get_station_px_center(dataframe, target_stations)
         if config.crop_size == 0:
-            # config.crop_size. = get_crop_size(stations_px, data_loader)
-            pass
+            config_dict['crop_size'] = get_crop_size(stations_px, data_loader)
 
         # Third step: Processing using map (cropping for stations)
         data_loader = data_loader.map(
@@ -107,7 +115,7 @@ def prepare_dataloader(
                 dataset_processing,
                 stations_px=stations_px,
                 station=station,
-                config=config
+                config=config_dict
             )
         )
 

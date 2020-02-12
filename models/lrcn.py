@@ -33,10 +33,11 @@ class LRCNModel(BaseModel):
         self.sequence.add(
             TimeDistributed(
                 Conv2D(
-                    32, (8, 8), strides=(2, 2), padding='same',
+                    32, (8, 8), padding='same',
                     kernel_initializer=initialiser,
                     kernel_regularizer=l2(reg_lambda)
-                )
+                ),
+                input_shape=config.input_shape
             )
         )
         self.sequence.add(TimeDistributed(BatchNormalization()))
@@ -58,10 +59,10 @@ class LRCNModel(BaseModel):
         )
 
         # 2nd-5th (default) blocks
-        # self.sequence = self.add_default_block(self.sequence, 32, init=initialiser, reg_lambda=reg_lambda)
-        # self.sequence = self.add_default_block(self.sequence, 128, init=initialiser, reg_lambda=reg_lambda)
-        # self.sequence = self.add_default_block(self.sequence, 256, init=initialiser, reg_lambda=reg_lambda)
-        # self.sequence = self.add_default_block(self.sequence, 512, init=initialiser, reg_lambda=reg_lambda)
+        self.sequence = self.add_default_block(self.sequence, 32, init=initialiser, reg_lambda=reg_lambda)
+        self.sequence = self.add_default_block(self.sequence, 128, init=initialiser, reg_lambda=reg_lambda)
+        self.sequence = self.add_default_block(self.sequence, 256, init=initialiser, reg_lambda=reg_lambda)
+        self.sequence = self.add_default_block(self.sequence, 512, init=initialiser, reg_lambda=reg_lambda)
 
         # LSTM output head
         self.sequence.add(TimeDistributed(Flatten()))
