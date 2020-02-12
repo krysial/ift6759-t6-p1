@@ -2,7 +2,7 @@
 #SBATCH --time=5:00:00
 #SBATCH --gres=gpu:k80:1
 #SBATCH --cpus-per-task=4
-#SBATCH --mem=8000M
+#SBATCH --mem=10000M
 #SBATCH -o ./results/slurm-%A_%a.out # STDOUT
 
 module load imkl/2018.3.222

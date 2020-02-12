@@ -13,6 +13,12 @@ from dataloader.get_crop_size import get_crop_size
 from dataloader.dataset_processing import dataset_processing
 from dataloader.synthetic import create_synthetic_generator, Options
 
+try:
+    import pydevd
+    DEBUGGING = True
+except ImportError:
+    DEBUGGING = False
+
 
 def prepare_dataloader(
         dataframe: pd.DataFrame,
@@ -50,6 +56,8 @@ def prepare_dataloader(
         """
         A function to create a generator to yield data to the dataloader
         """
+        if DEBUGGING:
+            pydevd.settrace(suspend=False)
 
         for i in range(0, len(target_datetimes), config['batch_size']):
             batch_of_datetimes = target_datetimes[i:i + config['batch_size']]
@@ -61,7 +69,7 @@ def prepare_dataloader(
                 config
             )
             images = get_raw_images(dataframe, batch_of_datetimes, config)
-            yield images, targets
+            yield tf.transpose(images, [0, 1, 3, 4, 2]), targets
 
     if not config.real:
         opts = Options(
