@@ -1,5 +1,6 @@
 from collections import namedtuple
 from itertools import zip_longest
+import pandas as pd
 
 from utils.synthetic_mnist_generator import SyntheticMNISTGenerator, \
     Options as SyntheticMNISTGeneratorOptions
@@ -13,6 +14,7 @@ try:
 except ImportError:
     DEBUGGING = False
 
+
 Options = namedtuple(
     'SyntheticGeneratorOptions',
     [
@@ -23,7 +25,8 @@ Options = namedtuple(
         'step_size',
         'lat',
         'lon',
-        'alt'
+        'alt',
+        'offsets'
     ]
 )
 
@@ -38,31 +41,50 @@ def create_synthetic_generator(opts):
         opts: protobuf that contains the options of the synthetic data,
         see SyntheticMNISTGeneratorOptions for options
     """
-    def create_generator():
+    def create_generator(dataset_size=1000):
         # This is needed to allow debugging
         # tf.data.dataset iterates in a separate C thread
         # preventing the debugger to be called.
         if DEBUGGING:
             pydevd.settrace(suspend=False)
 
+        def convert_to_index(offset):
+            offset_delta = pd.Timedelta(offset)
+            return int(offset_delta.seconds / (60 * 15))
+
+        offsets = list(map(convert_to_index, opts.offsets))
+
         mnist_opts = SyntheticMNISTGeneratorOptions(
             opts.image_size,
             opts.digit_size,
             opts.num_channels,
-            opts.seq_len,
+            opts.seq_len + offsets[-1],
             opts.step_size
         )
 
         ghi_opts = SyntheticGHIProcessorOptions(
             opts.lat,
             opts.lon,
-            opts.alt
+            opts.alt,
+            offsets
         )
 
-        for seq, ghi in map(
-            lambda data: (data, SyntheticGHIProcessor(ghi_opts).processData(data)),
-            SyntheticMNISTGenerator(mnist_opts)
-        ):
-            yield seq, ghi
+        ghi_processor = SyntheticGHIProcessor(ghi_opts)
+        mnist_generator = SyntheticMNISTGenerator(mnist_opts)
+
+        for i, (seq, ghi) in enumerate(map(
+            lambda data: (
+                data[:, offsets[-1]:, :, :],
+                ghi_processor.processData(data)
+            ),
+            mnist_generator
+        )):
+            if DEBUGGING:
+                pydevd.settrace(suspend=False)
+
+            if i < dataset_size:
+                yield seq, ghi
+            else:
+                break
 
     return create_generator

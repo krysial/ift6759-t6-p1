@@ -8,7 +8,8 @@ Options = namedtuple(
     [
         'lat',
         'lon',
-        'alt'
+        'alt',
+        'offsets'
     ]
 )
 
@@ -35,16 +36,27 @@ class SyntheticGHIProcessor(object):
         )
         self.cs = location.get_clearsky(times)
 
-    def processData(self, data):
-        if self.count < self.cs.shape[0]:
-            ghi = self.cs['ghi'][self.count]
-        else:
-            self.start_year += 1
-            self.setup_year_ghi()
-            ghi = self.cs['ghi'][self.count]
+    def processData(self, _data):
+        results = []
+        max_offset = self.opts.offsets[-1]
+        solar_power = np.random.randint(70, high=100) / 100
+
+        for offset in self.opts.offsets:
+            data = _data[:, max_offset - offset, :, :]
+
+            if self.count + max_offset < self.cs.shape[0]:
+                ghi = self.cs['ghi'][self.count + max_offset - offset]
+            else:
+                self.start_year += 1
+                self.setup_year_ghi()
+                ghi = self.cs['ghi'][self.count + max_offset - offset]
+
+            cloudness = np.average(
+                solar_power * (1 - (np.sum(data, axis=0) / data.shape[0]))
+            )
+
+            results.append(ghi * cloudness)
 
         self.count += 1
-        solar_power = np.random.rand()
-        cloudness = 1 - (np.sum(data) / np.prod(data.shape))
 
-        return ghi * cloudness
+        return results
