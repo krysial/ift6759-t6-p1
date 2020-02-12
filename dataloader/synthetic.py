@@ -41,7 +41,7 @@ def create_synthetic_generator(opts):
         opts: protobuf that contains the options of the synthetic data,
         see SyntheticMNISTGeneratorOptions for options
     """
-    def create_generator(dataset_size=1000):
+    def create_generator():
         # This is needed to allow debugging
         # tf.data.dataset iterates in a separate C thread
         # preventing the debugger to be called.
@@ -74,7 +74,7 @@ def create_synthetic_generator(opts):
 
         for i, (seq, ghi) in enumerate(map(
             lambda data: (
-                data[:, offsets[-1]:, :, :],
+                data[offsets[-1]:, :, :, :],
                 ghi_processor.processData(data)
             ),
             mnist_generator
@@ -82,9 +82,6 @@ def create_synthetic_generator(opts):
             if DEBUGGING:
                 pydevd.settrace(suspend=False)
 
-            if i < dataset_size:
-                yield seq, ghi
-            else:
-                break
+            yield seq, ghi
 
     return create_generator

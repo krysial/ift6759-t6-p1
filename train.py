@@ -57,14 +57,10 @@ def main(
         target_time_offsets,
         config,
         target_stations
-    )
+    ).batch(config.batch_size)
 
-    train_dataset = data_loader.take(int(0.7 * config.dataset_size)) \
-        .prefetch(tf.data.experimental.AUTOTUNE) \
-        .batch(config.batch_size)
-    valid_dataset = data_loader.skip(int(0.7 * config.dataset_size)) \
-        .prefetch(tf.data.experimental.AUTOTUNE) \
-        .batch(config.batch_size)
+    train_dataset = data_loader.take(int(0.9 * config.dataset_size) * config.epoch)
+    valid_dataset = data_loader.skip(int(0.9 * config.dataset_size) * config.epoch).take(int(0.1 * config.dataset_size))
 
     model = prepare_model(
         stations,
@@ -72,7 +68,7 @@ def main(
         config
     )
 
-    optimizer = Adam(lr=1e-5, decay=1e-6)
+    optimizer = Adam(lr=1e-4, decay=1e-5)
 
     model.compile(
         loss='mean_squared_error',
@@ -115,8 +111,10 @@ def main(
     model.fit_generator(
         train_dataset,
         epochs=config.epoch,
-        callbacks=[tb, early_stopper, csv_logger, checkpointer],
-        validation_data=valid_dataset
+        callbacks=[tb],
+        validation_data=valid_dataset,
+        steps_per_epoch=0.9 * config.dataset_size,
+        validation_steps=0.1 * config.dataset_size
     )
 
     print(model.summary())
@@ -140,19 +138,19 @@ if __name__ == "__main__":
         "--crop-size",
         type=int,
         help="size of the crop frame",
-        default=60
+        default=80
     )
     parser.add_argument(
         "--epoch",
         type=int,
         help="epoch count",
-        default=20
+        default=15
     )
     parser.add_argument(
         "--dataset-size",
         type=int,
         help="dataset size",
-        default=10000
+        default=1000
     )
     parser.add_argument(
         "--seq-len",
@@ -164,7 +162,7 @@ if __name__ == "__main__":
         "--batch-size",
         type=int,
         help="batch size of data",
-        default=100
+        default=32
     )
     parser.add_argument(
         "--model",
@@ -178,7 +176,7 @@ if __name__ == "__main__":
         help="channels to keep",
         type=str,
         nargs='*',
-        default=["ch1", "ch2", "ch3", "ch4", "ch6"]
+        default=["ch1", "ch2", "ch3"]
     )
     parser.add_argument(
         "-u",

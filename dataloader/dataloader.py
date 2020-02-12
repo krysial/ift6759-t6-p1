@@ -77,7 +77,8 @@ def prepare_dataloader(
         )
         generator = create_synthetic_generator(opts)
         data_loader = tf.data.Dataset.from_generator(
-            generator, (tf.float32, tf.float32), args=[config.dataset_size])
+            generator, (tf.float32, tf.float32)
+        )
     else:
         # First step in the data loading pipeline:
         # A generator object to retrieve a inputs resources and their targets
