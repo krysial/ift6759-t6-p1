@@ -60,9 +60,6 @@ def main(
         target_stations
     ).prefetch(tf.data.experimental.AUTOTUNE)
 
-    if not config.real:
-        data_loader = data_loader.batch(config.batch_size)
-
     model = prepare_model(
         stations,
         target_time_offsets,
