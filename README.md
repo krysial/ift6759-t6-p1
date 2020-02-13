@@ -15,7 +15,7 @@ The typical setup involves installing VSCode with a few extensions:
 - Codestyle lint
 
 An example of the remote `.vscode/launch.json` file can be seen here:
-```
+```javascript
 {
     // Use IntelliSense to learn about possible attributes.
     // Hover to view descriptions of existing attributes.
@@ -37,7 +37,7 @@ An example of the remote `.vscode/launch.json` file can be seen here:
 ```
 
 An example of the remote `.vscode/settings.json` file can be seen here:
-```
+```javascript
 {
     "python.pythonPath": "~/ift6759-env/bin/python",
     "python.formatting.autopep8Path": "~/ift6759-env/bin/autopep8",
