@@ -40,7 +40,6 @@ def dataset_processing(
         px_y = center[1] + px_offset
         return image_tensor[:, :, :, px_y_:px_y, px_x_:px_x]
 
-    @tf.function
     def processor(image_tensor, target_tensor):
         if DEBUGGING:
             pydevd.settrace(suspend=False)
