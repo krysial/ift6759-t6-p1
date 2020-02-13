@@ -17,14 +17,15 @@ from models import models
 from dataloader.dataloader import prepare_dataloader
 from models import prepare_model
 
-print(tf.config.experimental.list_physical_devices('GPU'))
-
 
 def main(
     config: typing.Dict[typing.AnyStr, typing.Any],
     admin_config_path: typing.AnyStr,
     user_config_path: typing.Optional[typing.AnyStr] = None
 ) -> None:
+    print(config)
+    print(tf.config.experimental.list_physical_devices('GPU'))
+
     user_config = {}
     if user_config_path:
         assert os.path.isfile(user_config_path), f"invalid user config file: {user_config_path}"
@@ -57,14 +58,7 @@ def main(
         target_time_offsets,
         config,
         target_stations
-    )
-
-    train_dataset = data_loader.take(int(0.7 * config.dataset_size)) \
-        .prefetch(tf.data.experimental.AUTOTUNE) \
-        .batch(config.batch_size)
-    valid_dataset = data_loader.skip(int(0.7 * config.dataset_size)) \
-        .prefetch(tf.data.experimental.AUTOTUNE) \
-        .batch(config.batch_size)
+    ).prefetch(tf.data.experimental.AUTOTUNE)
 
     model = prepare_model(
         stations,
@@ -72,7 +66,7 @@ def main(
         config
     )
 
-    optimizer = Adam(lr=1e-5, decay=1e-6)
+    optimizer = Adam(lr=1e-4, decay=1e-5)
 
     model.compile(
         loss='mean_squared_error',
@@ -84,7 +78,7 @@ def main(
             'results',
             'checkpoints',
             config.model + '-' +
-            'synthetic' if config.synthetic_data else 'real' +
+            'synthetic' if not config.real else 'real' +
             '.{epoch:03d}-{val_loss:.3f}.hdf5'
         ),
         verbose=1,
@@ -96,7 +90,7 @@ def main(
         log_dir=os.path.join('results', 'logs', config.model),
         histogram_freq=1,
         write_graph=True,
-        write_images=True
+        write_images=False
     )
 
     # Helper: Stop when we stop learning.
@@ -113,16 +107,23 @@ def main(
     )
 
     model.fit_generator(
-        train_dataset,
+        data_loader,
         epochs=config.epoch,
-        callbacks=[tb, early_stopper, csv_logger, checkpointer],
-        validation_data=valid_dataset
+        use_multiprocessing=True,
+        workers=10,
+        validation_data=data_loader,
+        steps_per_epoch=0.9 * config.dataset_size,
+        validation_steps=0.1 * config.dataset_size
     )
 
     print(model.summary())
 
 
 if __name__ == "__main__":
+    DEFAULT_SEQ_LEN = 6
+    DEFAULT_CHANNELS = ["ch1", "ch2", "ch3", "ch4", "ch6"]
+    DEFAULT_IMAGE_SIZE = 40
+
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--station",
@@ -131,40 +132,39 @@ if __name__ == "__main__":
         default="BND"
     )
     parser.add_argument(
-        "--synthetic-data",
-        type=bool,
+        "--real",
+        action='store_true',
         help="train on synthetic mnist data",
-        default=True
     )
     parser.add_argument(
         "--crop-size",
         type=int,
         help="size of the crop frame",
-        default=60
+        default=DEFAULT_IMAGE_SIZE
     )
     parser.add_argument(
         "--epoch",
         type=int,
         help="epoch count",
-        default=20
+        default=15
     )
     parser.add_argument(
         "--dataset-size",
         type=int,
         help="dataset size",
-        default=10000
+        default=10
     )
     parser.add_argument(
         "--seq-len",
         type=int,
         help="sequence length of frames in video",
-        default=6
+        default=DEFAULT_SEQ_LEN
     )
     parser.add_argument(
         "--batch-size",
         type=int,
         help="batch size of data",
-        default=100
+        default=32
     )
     parser.add_argument(
         "--model",
@@ -178,7 +178,7 @@ if __name__ == "__main__":
         help="channels to keep",
         type=str,
         nargs='*',
-        default=["ch1", "ch2", "ch3", "ch4", "ch6"]
+        default=DEFAULT_CHANNELS
     )
     parser.add_argument(
         "-u",
@@ -191,6 +191,18 @@ if __name__ == "__main__":
         "admin_config_path",
         type=str,
         help="path to the JSON config file used to store test set/evaluation parameters"
+    )
+    parser.add_argument(
+        "input_shape",
+        help="input shape of first model layer",
+        type=str,
+        nargs='*',
+        default=(
+            DEFAULT_SEQ_LEN,
+            DEFAULT_IMAGE_SIZE,
+            DEFAULT_IMAGE_SIZE,
+            len(DEFAULT_CHANNELS)
+        )
     )
     args = parser.parse_args()
 

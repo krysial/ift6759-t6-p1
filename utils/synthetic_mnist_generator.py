@@ -96,10 +96,10 @@ class SyntheticMNISTGenerator(object):
 
         data = np.zeros(
             (
-                self.opts.num_channels,
                 self.opts.seq_len,
                 self.opts.image_size,
-                self.opts.image_size
+                self.opts.image_size,
+                self.opts.num_channels
             ),
             dtype=np.float32
         )
@@ -119,7 +119,7 @@ class SyntheticMNISTGenerator(object):
                 left = start_x[i, n]
                 bottom = top + self.opts.digit_size
                 right = left + self.opts.digit_size
-                data[n, i, top:bottom, left:right] = digit_image
+                data[i, top:bottom, left:right, n] = digit_image
 
         return data
 

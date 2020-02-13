@@ -2,9 +2,11 @@ import typing
 import datetime
 import tensorflow as tf
 from models.dummy import DummyModel
+from models.lrcn import LRCNModel
 
 models = {
-    "dummy": DummyModel
+    "dummy": DummyModel,
+    "lrcn": LRCNModel
 }
 
 

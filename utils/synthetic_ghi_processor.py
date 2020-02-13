@@ -42,7 +42,7 @@ class SyntheticGHIProcessor(object):
         solar_power = np.random.randint(70, high=100) / 100
 
         for offset in self.opts.offsets:
-            data = _data[:, max_offset - offset, :, :]
+            data = _data[max_offset - offset, :, :, :]
 
             if self.count + max_offset < self.cs.shape[0]:
                 ghi = self.cs['ghi'][self.count + max_offset - offset]
@@ -52,7 +52,7 @@ class SyntheticGHIProcessor(object):
                 ghi = self.cs['ghi'][self.count + max_offset - offset]
 
             cloudness = np.average(
-                solar_power * (1 - (np.sum(data, axis=0) / data.shape[0]))
+                solar_power * (1 - (np.sum(data, axis=2) / data.shape[2]))
             )
 
             results.append(ghi * cloudness)

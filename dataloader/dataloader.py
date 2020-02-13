@@ -6,11 +6,10 @@ import datetime
 import functools
 import typing
 
-from dataloader.get_GHI_targets import get_GHI_targets
-from dataloader.get_raw_images import get_raw_images
-from dataloader.get_station_px_center import get_station_px_center
 from dataloader.get_crop_size import get_crop_size
 from dataloader.dataset_processing import dataset_processing
+from dataloader.real import create_data_generator
+from dataloader.get_station_px_center import get_station_px_center
 from dataloader.synthetic import create_synthetic_generator, Options
 
 
@@ -37,33 +36,7 @@ def prepare_dataloader(
            must correspond to one sequence of past imagery data. The tensors must be generated in the order given
            by ``target_sequences``. The shape of the tf.data.Dataset should be ([None, temporal_seq, 5, crop_size, crop_size], [None, 4])
     """
-
-    def create_data_generator(
-            dataframe: pd.DataFrame,
-            target_datetimes: typing.List[datetime.datetime],
-            station: typing.Dict[
-                typing.AnyStr,
-                typing.Tuple[float, float, float]
-            ],
-            target_time_offsets: typing.List[datetime.timedelta],
-            config: typing.Dict[typing.AnyStr, typing.Any],):
-        """
-        A function to create a generator to yield data to the dataloader
-        """
-
-        for i in range(0, len(target_datetimes), config.batch_size):
-            batch_of_datetimes = target_datetimes[i:i + config['batch_size']]
-            targets = get_GHI_targets(
-                dataframe,
-                batch_of_datetimes,
-                station,
-                target_time_offsets,
-                config
-            )
-            images = get_raw_images(dataframe, batch_of_datetimes, config)
-            yield images, targets
-
-    if config.synthetic_data:
+    if not config.real:
         opts = Options(
             image_size=config.crop_size,
             digit_size=28,
@@ -77,17 +50,25 @@ def prepare_dataloader(
         )
         generator = create_synthetic_generator(opts)
         data_loader = tf.data.Dataset.from_generator(
-            generator, (tf.float32, tf.float32), args=[config.dataset_size])
+            generator, (tf.float32, tf.float32)
+        ).batch(config.batch_size)
     else:
         # First step in the data loading pipeline:
         # A generator object to retrieve a inputs resources and their targets
-        generator = functools.partial(
-            create_data_generator,
+        config_dict = {}
+        config_dict['batch_size'] = config.batch_size
+        config_dict['channels'] = config.channels
+        config_dict['target_datetimes'] = target_datetimes
+        config_dict['goes13_dataset'] = 'hdf516'
+        config_dict['crop_size'] = config.crop_size
+        config_dict['no_of_temporal_seq'] = config.seq_len
+
+        generator = create_data_generator(
             dataframe=dataframe,
             target_datetimes=target_datetimes,
             station=station,
             target_time_offsets=target_time_offsets,
-            config=config
+            config=config_dict
         )
 
         data_loader = tf.data.Dataset.from_generator(
@@ -97,18 +78,16 @@ def prepare_dataloader(
         # coordinates on image and crop area dimensions
         stations_px = get_station_px_center(dataframe, target_stations)
         if config.crop_size == 0:
-            # config.crop_size. = get_crop_size(stations_px, data_loader)
-            pass
+            config_dict['crop_size'] = get_crop_size(stations_px, data_loader)
 
         # Third step: Processing using map (cropping for stations)
-        data_loader = data_loader.map(
-            functools.partial(
-                dataset_processing,
-                stations_px=stations_px,
-                station=station,
-                config=config
-            )
+        data_processor = dataset_processing(
+            stations_px=stations_px,
+            station=station,
+            config=config_dict
         )
+
+        data_loader = data_loader.map(data_processor)
 
     # Final step of data loading pipeline: Return the dataset loading object
     return data_loader
