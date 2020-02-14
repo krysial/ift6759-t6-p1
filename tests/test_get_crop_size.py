@@ -11,13 +11,13 @@ from dataloader.get_crop_size import *
 @pytest.fixture
 def stations_px():
     stations = {
-        "BND": [r_i(0, 100), r_i(0, 100)],
-        "TBL": [r_i(0, 100), r_i(0, 100)],
-        "DRA": [r_i(0, 100), r_i(0, 100)],
-        "FPK": [r_i(0, 100), r_i(0, 100)],
-        "GWN": [r_i(0, 100), r_i(0, 100)],
-        "PSU": [r_i(0, 100), r_i(0, 100)],
-        "SXF": [r_i(0, 100), r_i(0, 100)],
+        "BND": [r_i(2, 99), r_i(2, 99)],
+        "TBL": [r_i(2, 99), r_i(2, 99)],
+        "DRA": [r_i(2, 99), r_i(2, 99)],
+        "FPK": [r_i(2, 99), r_i(2, 99)],
+        "GWN": [r_i(2, 99), r_i(2, 99)],
+        "PSU": [r_i(2, 99), r_i(2, 99)],
+        "SXF": [r_i(2, 99), r_i(2, 99)],
     }
     return stations
 
