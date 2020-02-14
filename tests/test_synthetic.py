@@ -63,4 +63,4 @@ def test_datasetloader_ghi(create_generator):
     _, ghi = next(iter(data_loader))
 
     assert ghi is not None
-    assert np.array_equal(ghi.numpy(), [0, 0, 0, 57])
+    assert np.array_equal(ghi.numpy(), [0, 0, 0, 50])
