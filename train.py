@@ -40,10 +40,12 @@ def main(
     assert os.path.isfile(dataframe_path), f"invalid dataframe path: {dataframe_path}"
     dataframe = pd.read_pickle(dataframe_path)
 
-    if "start_bound" in admin_config:
+    if config.train:
+	try:
         dataframe = dataframe[dataframe.index >= datetime.datetime.fromisoformat(admin_config["start_bound"])]
-    if "end_bound" in admin_config:
         dataframe = dataframe[dataframe.index < datetime.datetime.fromisoformat(admin_config["end_bound"])]
+	except KeyError:
+        print("start_bound and end_bound not defined in admin_config")
 
     target_datetimes = [datetime.datetime.fromisoformat(d) for d in admin_config["target_datetimes"]]
     assert target_datetimes and all([d in dataframe.index for d in target_datetimes])
@@ -141,6 +143,12 @@ if __name__ == "__main__":
         type=int,
         help="size of the crop frame",
         default=DEFAULT_IMAGE_SIZE
+    )
+    parser.add_argument(
+        "--train",
+        type=int,
+        help="1 for train and 0 for test",
+        default=1
     )
     parser.add_argument(
         "--epoch",

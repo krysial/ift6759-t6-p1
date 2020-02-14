@@ -62,6 +62,7 @@ def prepare_dataloader(
         config_dict['goes13_dataset'] = 'hdf516'
         config_dict['crop_size'] = config.crop_size
         config_dict['no_of_temporal_seq'] = config.seq_len
+        config_dict['train'] = config.train
 
         generator = create_data_generator(
             dataframe=dataframe,

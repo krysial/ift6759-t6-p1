@@ -113,7 +113,7 @@ That outputs at time of writing the following:
 
 ```
 usage: train.py [-h] [--station STATION] [--real] [--crop-size CROP_SIZE]
-                [--epoch EPOCH] [--dataset-size DATASET_SIZE]
+                [--epoch EPOCH] [--dataset-size DATASET_SIZE] [--train TRAIN]
                 [--seq-len SEQ_LEN] [--batch-size BATCH_SIZE] [--model MODEL]
                 [--channels [CHANNELS [CHANNELS ...]]] [-u USER_CFG_PATH]
                 admin_config_path [input_shape [input_shape ...]]
@@ -130,6 +130,7 @@ optional arguments:
   --crop-size CROP_SIZE
                         size of the crop frame
   --epoch EPOCH         epoch count
+  --train TRAIN         1 for training 0 for testing
   --dataset-size DATASET_SIZE
                         dataset size
   --seq-len SEQ_LEN     sequence length of frames in video
