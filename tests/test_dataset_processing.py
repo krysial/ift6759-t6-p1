@@ -12,7 +12,7 @@ def config():
     config = {
         'seq_len': 15,
         'channels': ['ch1', 'ch2', 'ch3', 'ch4', 'ch6'],
-        'batch_size': 200,
+        'batch_size': 2,
         'crop_size': 20
     }
     return config
