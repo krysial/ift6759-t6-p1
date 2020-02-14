@@ -7,6 +7,7 @@ import pandas as pd
 import time
 import math
 import tensorflow as tf
+import gc
 
 from tensorflow.keras.optimizers import Adam, RMSprop
 from tensorflow.keras.callbacks import TensorBoard,\
@@ -67,85 +68,71 @@ def main(
         config
     )
 
-    checkpointer = ModelCheckpoint(
-        filepath=os.path.join(
-            'results',
-            'checkpoints',
-            config.model + '-' +
-            'synthetic' if not config.real else 'real' +
-            '.{epoch:03d}-{val_loss:.3f}.hdf5'
-        ),
-        verbose=1,
-        save_best_only=True
-    )
-
-    # Helper: TensorBoard
-    tb = TensorBoard(
-        log_dir=os.path.join('results', 'logs', config.model),
-        write_graph=True,
-        histogram_freq=1,
-        profile_batch=3
-    )
-
-    # Helper: Stop when we stop learning.
-    early_stopper = EarlyStopping(patience=5)
-
-    # Helper: Save results.
-    timestamp = time.time()
-    csv_logger = CSVLogger(
-        os.path.join(
-            'results',
-            'logs',
-            config.model + '-' + 'training-' + str(timestamp) + '.log'
-        )
-    )
-
     optimizer = Adam(lr=1e-4, decay=1e-5)
     loss_fn = tf.keras.losses.MeanSquaredError()
-
-    # Specify metrics for training
-    train_loss = tf.keras.metrics.Mean(name='train_loss')
-
-    # Specify metrics for testing
-    valid_loss = tf.keras.metrics.Mean(name='valid_loss')
 
     train_step_per_epoch = math.floor(0.9 * config.dataset_size)
     valid_step_per_epoch = math.floor(0.1 * config.dataset_size)
 
-    for epoch in range(config.epoch):
-        print('Start of epoch %d' % (epoch,))
+    writer = tf.summary.create_file_writer('results/logs/')
+    tf.random.set_seed(1)
 
-        for step, (i_batch_train, t_batch_train) in enumerate(data_loader.take(train_step_per_epoch)):
-            with tf.GradientTape() as tape:
-                targets = model.sequence(i_batch_train)
-                loss_value = loss_fn(t_batch_train, targets)
+    with writer.as_default():
+        for epoch in range(config.epoch):
+            print('Start of epoch %d' % (epoch,))
 
-            train_loss(loss_value)
+            for step, (i_batch_train, t_batch_train) in enumerate(data_loader.take(train_step_per_epoch)):
+                tf.summary.trace_on(graph=True, profiler=True)
+                with tf.GradientTape() as tape:
+                    targets = model(i_batch_train)
+                    loss_value = loss_fn(t_batch_train, targets)
 
-            grads = tape.gradient(loss_value, model.trainable_weights)
-            optimizer.apply_gradients(zip(grads, model.trainable_weights))
+                tf.summary.scalar("train_loss", loss_value, step=step)
+                tf.summary.trace_export(
+                    name='profiler',
+                    step=step,
+                    profiler_outdir='results/logs/profiler'
+                )
 
-            # Log every 200 batches.
-            if step % math.floor(train_step_per_epoch / min(10, train_step_per_epoch)) == 0:
-                print('Training loss (for one batch) at step %s: %s' % (step, float(loss_value)))
-                print('Seen so far: %s samples' % ((step + 1) * config.batch_size))
+                writer.flush()
 
-        for step, (i_batch_valid, t_batch_valid) in enumerate(data_loader.take(valid_step_per_epoch)):
-            targets = model(i_batch_valid)
-            loss_value = loss_fn(t_batch_valid, targets)
+                grads = tape.gradient(loss_value, model.trainable_weights)
+                optimizer.apply_gradients(zip(grads, model.trainable_weights))
+                tf.keras.backend.clear_session()
 
-            valid_loss(loss_value)
+                # Log every 200 batches.
+                if step % math.floor(train_step_per_epoch / min(10, train_step_per_epoch)) == 0:
+                    print('Training loss (for one batch) at step %s: %s' % (step, float(loss_value)))
+                    print('Seen so far: %s samples' % ((step + 1) * config.batch_size))
+                    tf.summary.image(
+                        'training_image',
+                        i_batch_train[0, :, :, :, :4],
+                        step=step,
+                        max_outputs=3
+                    )
 
-            # Log every 200 batches.
-            if step % math.floor(valid_step_per_epoch / min(10, valid_step_per_epoch)) == 0:
-                print('Validation loss (for one batch) at step %s: %s' % (step, float(loss_value)))
-                print('Seen so far: %s samples' % ((step + 1) * config.batch_size))
+                del i_batch_train, t_batch_train
+                gc.collect()
+
+            for step, (i_batch_valid, t_batch_valid) in enumerate(data_loader.take(valid_step_per_epoch)):
+                targets = model(i_batch_valid)
+                loss_value = loss_fn(t_batch_valid, targets)
+
+                tf.summary.scalar("valid_loss", loss_value, step=step)
+                writer.flush()
+
+                # Log every 200 batches.
+                if step % math.floor(valid_step_per_epoch / min(10, valid_step_per_epoch)) == 0:
+                    print('Validation loss (for one batch) at step %s: %s' % (step, float(loss_value)))
+                    print('Seen so far: %s samples' % ((step + 1) * config.batch_size))
+
+        tf.summary.trace_off()
 
     print(model.summary())
 
 
 if __name__ == "__main__":
-    DEFAULT_SEQ_LEN = 6
+    DEFAULT_SEQ_LEN = 4
     DEFAULT_CHANNELS = ["ch1", "ch2", "ch3", "ch4", "ch6"]
     DEFAULT_IMAGE_SIZE = 40
 
