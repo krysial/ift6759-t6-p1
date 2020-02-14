@@ -5,6 +5,7 @@ import argparse
 import typing
 import pandas as pd
 import time
+import math
 import tensorflow as tf
 
 from tensorflow.keras.optimizers import Adam, RMSprop
@@ -66,13 +67,6 @@ def main(
         config
     )
 
-    optimizer = Adam(lr=1e-4, decay=1e-5)
-
-    model.compile(
-        loss='mean_squared_error',
-        optimizer=optimizer
-    )
-
     checkpointer = ModelCheckpoint(
         filepath=os.path.join(
             'results',
@@ -88,9 +82,9 @@ def main(
     # Helper: TensorBoard
     tb = TensorBoard(
         log_dir=os.path.join('results', 'logs', config.model),
-        histogram_freq=1,
         write_graph=True,
-        write_images=False
+        histogram_freq=1,
+        profile_batch=3
     )
 
     # Helper: Stop when we stop learning.
@@ -106,15 +100,46 @@ def main(
         )
     )
 
-    model.fit_generator(
-        data_loader,
-        epochs=config.epoch,
-        use_multiprocessing=True,
-        workers=10,
-        validation_data=data_loader,
-        steps_per_epoch=0.9 * config.dataset_size,
-        validation_steps=0.1 * config.dataset_size
-    )
+    optimizer = Adam(lr=1e-4, decay=1e-5)
+    loss_fn = tf.keras.losses.MeanSquaredError()
+
+    # Specify metrics for training
+    train_loss = tf.keras.metrics.Mean(name='train_loss')
+
+    # Specify metrics for testing
+    valid_loss = tf.keras.metrics.Mean(name='valid_loss')
+
+    train_step_per_epoch = math.floor(0.9 * config.dataset_size)
+    valid_step_per_epoch = math.floor(0.1 * config.dataset_size)
+
+    for epoch in range(config.epoch):
+        print('Start of epoch %d' % (epoch,))
+
+        for step, (i_batch_train, t_batch_train) in enumerate(data_loader.take(train_step_per_epoch)):
+            with tf.GradientTape() as tape:
+                targets = model.sequence(i_batch_train)
+                loss_value = loss_fn(t_batch_train, targets)
+
+            train_loss(loss_value)
+
+            grads = tape.gradient(loss_value, model.trainable_weights)
+            optimizer.apply_gradients(zip(grads, model.trainable_weights))
+
+            # Log every 200 batches.
+            if step % math.floor(train_step_per_epoch / min(10, train_step_per_epoch)) == 0:
+                print('Training loss (for one batch) at step %s: %s' % (step, float(loss_value)))
+                print('Seen so far: %s samples' % ((step + 1) * config.batch_size))
+
+        for step, (i_batch_valid, t_batch_valid) in enumerate(data_loader.take(valid_step_per_epoch)):
+            targets = model(i_batch_valid)
+            loss_value = loss_fn(t_batch_valid, targets)
+
+            valid_loss(loss_value)
+
+            # Log every 200 batches.
+            if step % math.floor(valid_step_per_epoch / min(10, valid_step_per_epoch)) == 0:
+                print('Validation loss (for one batch) at step %s: %s' % (step, float(loss_value)))
+                print('Seen so far: %s samples' % ((step + 1) * config.batch_size))
 
     print(model.summary())
 

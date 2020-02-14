@@ -7,6 +7,8 @@ import functools
 from numpy.random import randint as r_i
 from dataloader.get_crop_size import *
 
+np.random.seed(1000)
+
 
 @pytest.fixture
 def stations_px():
@@ -41,7 +43,7 @@ def test_output(dataloader, stations_px):
 
 def test_zero_check(dataloader, stations_px):
     sq_crop_side_len = get_crop_size(stations_px, dataloader)
-    assert sq_crop_side_len != 0
+    assert sq_crop_side_len == 1
 
 
 def test_positive_check(dataloader, stations_px):
