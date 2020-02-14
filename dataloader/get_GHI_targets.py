@@ -23,7 +23,7 @@ def get_GHI_targets(
     Returns:
         A 2D NumPy array of GHI values, of size [#datetimes x #offsets].
     """
-    # Initialize GHI target array
+    # Initialize target array
     targets = np.zeros((len(datetimes), len(offsets)))
 
     # Get station name as string
@@ -35,10 +35,10 @@ def get_GHI_targets(
         for j, offset in enumerate(offsets):
             # Get target time with offset
             t = dt + offset
-            # Get GHI value at time "t"
-            # If GHI is an invalid type or does not exist, pass
+            # Get target value at time "t"
+            # If target value is an invalid type or does not exist, pass
             try:
-                ghi = df.loc[t][f'{station}_GHI']
+                ghi = df.loc[t][f"{station}_{config['target']}"]
                 assert isinstance(ghi, np.float64)
             except (AssertionError, KeyError):
                 pass
@@ -64,8 +64,8 @@ if __name__ == '__main__':
     offsets = ["P0DT0H0M0S", "P0DT1H0M0S", "P0DT3H0M0S", "P0DT6H0M0S"]
     offsets = [timedelta(hours=int(x[4])) for x in offsets]
 
-    # Configuration dictionary (currently unused)
-    config = {}
+    # Configuration dictionary
+    config = {'target': 'GHI'}
 
     # Call function and print results
     targets = get_GHI_targets(df, datetimes, station, offsets, config)
