@@ -41,6 +41,7 @@ def test_shape_offsets(df, datetimes, station, offsets, config):
     targets = get_GHI_targets(df, datetimes, station, offsets, config)
     assert targets.shape == (len(datetimes), len(offsets))
 
+
 # With sequence of images, target array should be of size [#datetimes, sequence length]
 def test_shape_sequence(df, datetimes, station):
     offsets = [timedelta()]
