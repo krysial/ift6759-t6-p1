@@ -58,7 +58,7 @@ def main(
         target_time_offsets,
         config,
         target_stations
-    ).prefetch(tf.data.experimental.AUTOTUNE)
+    ).prefetch(tf.data.experimental.AUTOTUNE).take(config.dataset_size).repeat(count=config.epoch)
 
     model = prepare_model(
         stations,
@@ -66,7 +66,7 @@ def main(
         config
     )
 
-    optimizer = Adam(lr=1e-4, decay=1e-5)
+    optimizer = Adam(lr=1e-10, decay=1e-12)
 
     model.compile(
         loss='mean_squared_error',
@@ -84,6 +84,19 @@ def main(
         verbose=1,
         save_best_only=True
     )
+
+    # class MyCustomCallback(tf.keras.callbacks.Callback):
+    #     def on_train_batch_begin(self, batch, logs=None):
+    #         print('Training: batch {} begins at {}'.format(batch, datetime.datetime.now().time()))
+
+    #     def on_train_batch_end(self, batch, logs=None):
+    #         print('Training: batch {} ends at {}'.format(batch, datetime.datetime.now().time()))
+
+    #     def on_test_batch_begin(self, batch, logs=None):
+    #         print('Evaluating: batch {} begins at {}'.format(batch, datetime.datetime.now().time()))
+
+    #     def on_test_batch_end(self, batch, logs=None):
+    #         print('Evaluating: batch {} ends at {}'.format(batch, datetime.datetime.now().time()))
 
     # Helper: TensorBoard
     tb = TensorBoard(
@@ -110,8 +123,9 @@ def main(
         data_loader,
         epochs=config.epoch,
         use_multiprocessing=True,
-        workers=10,
+        workers=32,
         validation_data=data_loader,
+        callbacks=[tb, csv_logger, early_stopper],
         steps_per_epoch=0.9 * config.dataset_size,
         validation_steps=0.1 * config.dataset_size
     )
