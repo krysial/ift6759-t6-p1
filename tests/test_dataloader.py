@@ -166,3 +166,77 @@ def test_dataloader_synthetic_tgt_ndims(dataframe, target_datetimes,
     for img, tgt in dl:
         break
     assert tgt.ndim == 2
+
+
+def test_dataloader_real_batch_size_check(dataframe, target_datetimes,
+                                   station, target_time_offsets,
+                                   config_real, target_stations):
+    dl = prepare_dataloader(dataframe, target_datetimes,
+                            station, target_time_offsets,
+                            config_real, target_stations
+                            )
+    for img, tgt in dl:
+        break
+    assert img.shape[0] == config_real.batch_size
+    assert tgt.shape[0] == config_real.batch_size
+
+
+def test_dataloader_synthetic_batch_size_check(dataframe, target_datetimes,
+                                        station, target_time_offsets,
+                                        config_synthetic, target_stations):
+    dl = prepare_dataloader(dataframe, target_datetimes,
+                            station, target_time_offsets,
+                            config_synthetic, target_stations
+                            )
+    for img, tgt in dl:
+        break
+    assert img.shape[0] == config_synthetic.batch_size
+    assert tgt.shape[0] == config_synthetic.batch_size
+
+
+def test_dataloader_real_seq_len_check(dataframe, target_datetimes,
+                                   station, target_time_offsets,
+                                   config_real, target_stations):
+    dl = prepare_dataloader(dataframe, target_datetimes,
+                            station, target_time_offsets,
+                            config_real, target_stations
+                            )
+    for img, tgt in dl:
+        break
+    assert img.shape[1] == config_real.seq_len
+
+
+def test_dataloader_synthetic_seq_len_check(dataframe, target_datetimes,
+                                        station, target_time_offsets,
+                                        config_synthetic, target_stations):
+    dl = prepare_dataloader(dataframe, target_datetimes,
+                            station, target_time_offsets,
+                            config_synthetic, target_stations
+                            )
+    for img, tgt in dl:
+        break
+    assert img.shape[1] == config_synthetic.seq_len
+
+
+def test_dataloader_real_channel_len_check(dataframe, target_datetimes,
+                                   station, target_time_offsets,
+                                   config_real, target_stations):
+    dl = prepare_dataloader(dataframe, target_datetimes,
+                            station, target_time_offsets,
+                            config_real, target_stations
+                            )
+    for img, tgt in dl:
+        break
+    assert img.shape[-1] == len(config_real.channels)
+
+
+def test_dataloader_synthetic_channel_len_check(dataframe, target_datetimes,
+                                        station, target_time_offsets,
+                                        config_synthetic, target_stations):
+    dl = prepare_dataloader(dataframe, target_datetimes,
+                            station, target_time_offsets,
+                            config_synthetic, target_stations
+                            )
+    for img, tgt in dl:
+        break
+    assert img.shape[1] == len(config_synthetic.channels)
