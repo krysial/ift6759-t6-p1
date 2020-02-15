@@ -239,4 +239,4 @@ def test_dataloader_synthetic_channel_len_check(dataframe, target_datetimes,
                             )
     for img, tgt in dl:
         break
-    assert img.shape[1] == len(config_synthetic.channels)
+    assert img.shape[-1] == len(config_synthetic.channels)
