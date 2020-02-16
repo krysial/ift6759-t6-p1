@@ -202,7 +202,7 @@ if __name__ == "__main__":
         "--target",
         type=str,
         help="target column name. {station}_{target}",
-        default = 'GHI'
+        default='GHI'
     )
     parser.add_argument(
         "input_shape",
