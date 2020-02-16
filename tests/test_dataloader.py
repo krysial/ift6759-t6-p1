@@ -10,6 +10,7 @@ import json
 import pickle
 import os
 
+from unittest import mock
 from dataloader.dataloader import *
 
 
@@ -100,16 +101,22 @@ def target_stations(user_config):
     return user_config['stations']
 
 
+def randint_mock(x, y):
+    # the test h5 file is missing a lot of frames, forcing to point to a known one
+    return 67
+
+
 def test_dataloader_real(dataframe, target_datetimes,
                          station, target_time_offsets,
                          config_real,
                          # target_stations
                          ):
-    dl = prepare_dataloader(dataframe, target_datetimes,
-                            station, target_time_offsets,
-                            config_real,
-                            # target_stations
-                            )
+    with mock.patch('numpy.random.randint', randint_mock):
+        dl = prepare_dataloader(dataframe, target_datetimes,
+                                station, target_time_offsets,
+                                config_real,
+                                # target_stations
+                                )
     assert isinstance(dl, tf.data.Dataset)
 
 
@@ -131,11 +138,12 @@ def test_dataloader_real_img_ndims(dataframe, target_datetimes,
                                    config_real,
                                    # target_stations
                                    ):
-    dl = prepare_dataloader(dataframe, target_datetimes,
-                            station, target_time_offsets,
-                            config_real,
-                            # target_stations
-                            )
+    with mock.patch('numpy.random.randint', randint_mock):
+        dl = prepare_dataloader(dataframe, target_datetimes,
+                                station, target_time_offsets,
+                                config_real,
+                                # target_stations
+                                )
     for img, tgt in dl:
         break
     assert img.ndim == 5, f"{config_real}"
@@ -146,11 +154,12 @@ def test_dataloader_real_tgt_ndims(dataframe, target_datetimes,
                                    config_real,
                                    # target_stations
                                    ):
-    dl = prepare_dataloader(dataframe, target_datetimes,
-                            station, target_time_offsets,
-                            config_real,
-                            # target_stations
-                            )
+    with mock.patch('numpy.random.randint', randint_mock):
+        dl = prepare_dataloader(dataframe, target_datetimes,
+                                station, target_time_offsets,
+                                config_real,
+                                # target_stations
+                                )
     for img, tgt in dl:
         break
     assert tgt.ndim == 2
@@ -191,11 +200,12 @@ def test_dataloader_real_batch_size_check(dataframe, target_datetimes,
                                           config_real,
                                           # target_stations
                                           ):
-    dl = prepare_dataloader(dataframe, target_datetimes,
-                            station, target_time_offsets,
-                            config_real,
-                            # target_stations
-                            )
+    with mock.patch('numpy.random.randint', randint_mock):
+        dl = prepare_dataloader(dataframe, target_datetimes,
+                                station, target_time_offsets,
+                                config_real,
+                                # target_stations
+                                )
     for img, tgt in dl:
         break
     assert img.shape[0] == config_real.batch_size
@@ -223,11 +233,12 @@ def test_dataloader_real_seq_len_check(dataframe, target_datetimes,
                                        config_real,
                                        # target_stations
                                        ):
-    dl = prepare_dataloader(dataframe, target_datetimes,
-                            station, target_time_offsets,
-                            config_real,
-                            # target_stations
-                            )
+    with mock.patch('numpy.random.randint', randint_mock):
+        dl = prepare_dataloader(dataframe, target_datetimes,
+                                station, target_time_offsets,
+                                config_real,
+                                # target_stations
+                                )
     for img, tgt in dl:
         break
     assert img.shape[1] == config_real.seq_len
@@ -253,11 +264,12 @@ def test_dataloader_real_channel_len_check(dataframe, target_datetimes,
                                            config_real,
                                            # target_stations
                                            ):
-    dl = prepare_dataloader(dataframe, target_datetimes,
-                            station, target_time_offsets,
-                            config_real,
-                            # target_stations
-                            )
+    with mock.patch('numpy.random.randint', randint_mock):
+        dl = prepare_dataloader(dataframe, target_datetimes,
+                                station, target_time_offsets,
+                                config_real,
+                                # target_stations
+                                )
     for img, tgt in dl:
         break
     assert img.shape[-1] == len(config_real.channels)
