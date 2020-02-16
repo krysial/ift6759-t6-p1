@@ -58,7 +58,7 @@ def main(
         target_time_offsets,
         config,
         target_stations
-    ).prefetch(tf.data.experimental.AUTOTUNE).take(config.dataset_size).repeat(count=config.epoch)
+    ).prefetch(tf.data.experimental.AUTOTUNE)
 
     model = prepare_model(
         stations,
@@ -126,8 +126,8 @@ def main(
         workers=32,
         validation_data=data_loader,
         callbacks=[tb, csv_logger, early_stopper],
-        steps_per_epoch=0.9 * config.dataset_size,
-        validation_steps=0.1 * config.dataset_size
+        steps_per_epoch=int(0.9 * dataframe.shape[0]),
+        validation_steps=int(0.1 * dataframe.shape[0])
     )
 
     print(model.summary())
@@ -161,12 +161,6 @@ if __name__ == "__main__":
         type=int,
         help="epoch count",
         default=15
-    )
-    parser.add_argument(
-        "--dataset-size",
-        type=int,
-        help="dataset size",
-        default=10
     )
     parser.add_argument(
         "--seq-len",
