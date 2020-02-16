@@ -169,8 +169,8 @@ def test_dataloader_synthetic_tgt_ndims(dataframe, target_datetimes,
 
 
 def test_dataloader_real_batch_size_check(dataframe, target_datetimes,
-                                   station, target_time_offsets,
-                                   config_real, target_stations):
+                                          station, target_time_offsets,
+                                          config_real, target_stations):
     dl = prepare_dataloader(dataframe, target_datetimes,
                             station, target_time_offsets,
                             config_real, target_stations
@@ -182,8 +182,8 @@ def test_dataloader_real_batch_size_check(dataframe, target_datetimes,
 
 
 def test_dataloader_synthetic_batch_size_check(dataframe, target_datetimes,
-                                        station, target_time_offsets,
-                                        config_synthetic, target_stations):
+                                               station, target_time_offsets,
+                                               config_synthetic, target_stations):
     dl = prepare_dataloader(dataframe, target_datetimes,
                             station, target_time_offsets,
                             config_synthetic, target_stations
@@ -195,8 +195,8 @@ def test_dataloader_synthetic_batch_size_check(dataframe, target_datetimes,
 
 
 def test_dataloader_real_seq_len_check(dataframe, target_datetimes,
-                                   station, target_time_offsets,
-                                   config_real, target_stations):
+                                       station, target_time_offsets,
+                                       config_real, target_stations):
     dl = prepare_dataloader(dataframe, target_datetimes,
                             station, target_time_offsets,
                             config_real, target_stations
@@ -207,8 +207,8 @@ def test_dataloader_real_seq_len_check(dataframe, target_datetimes,
 
 
 def test_dataloader_synthetic_seq_len_check(dataframe, target_datetimes,
-                                        station, target_time_offsets,
-                                        config_synthetic, target_stations):
+                                            station, target_time_offsets,
+                                            config_synthetic, target_stations):
     dl = prepare_dataloader(dataframe, target_datetimes,
                             station, target_time_offsets,
                             config_synthetic, target_stations
@@ -219,8 +219,8 @@ def test_dataloader_synthetic_seq_len_check(dataframe, target_datetimes,
 
 
 def test_dataloader_real_channel_len_check(dataframe, target_datetimes,
-                                   station, target_time_offsets,
-                                   config_real, target_stations):
+                                           station, target_time_offsets,
+                                           config_real, target_stations):
     dl = prepare_dataloader(dataframe, target_datetimes,
                             station, target_time_offsets,
                             config_real, target_stations
@@ -231,8 +231,8 @@ def test_dataloader_real_channel_len_check(dataframe, target_datetimes,
 
 
 def test_dataloader_synthetic_channel_len_check(dataframe, target_datetimes,
-                                        station, target_time_offsets,
-                                        config_synthetic, target_stations):
+                                                station, target_time_offsets,
+                                                config_synthetic, target_stations):
     dl = prepare_dataloader(dataframe, target_datetimes,
                             station, target_time_offsets,
                             config_synthetic, target_stations
