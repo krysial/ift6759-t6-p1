@@ -24,6 +24,7 @@ def get_GHI_targets(
         A 2D NumPy array of GHI values, of size [#datetimes, #offsets + config['seq_len'] - 1].
     """
     # Add past images (if any) as offsets
+    offsets = offsets.copy()
     for i in range(config['seq_len'] - 1):
         offsets.insert(0, timedelta(minutes=-(i + 1) * 15))
 
