@@ -18,12 +18,11 @@ opts = Options(
     offsets=["P0DT0H0M0S", "P0DT1H0M0S", "P0DT3H0M0S", "P0DT6H0M0S"]
 )
 
-np.random.seed(100)
-
 
 @pytest.fixture
 def create_generator():
     def _create_generator():
+        np.random.seed(100)
         return create_synthetic_generator(opts)
 
     return _create_generator
@@ -63,4 +62,4 @@ def test_datasetloader_ghi(create_generator):
     _, ghi = next(iter(data_loader))
 
     assert ghi is not None
-    assert np.array_equal(ghi.numpy(), [0, 0, 0, 50])
+    assert np.array_equal(ghi.numpy(), [0, 0, 0, 64])
