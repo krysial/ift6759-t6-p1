@@ -18,8 +18,7 @@ def prepare_dataloader(
         target_datetimes: typing.List[datetime.datetime],
         station: typing.Dict[typing.AnyStr, typing.Tuple[float, float, float]],
         target_time_offsets: typing.List[datetime.timedelta],
-        config: typing.Dict[typing.AnyStr, typing.Any],
-        target_stations: typing.Dict[typing.AnyStr, typing.Tuple[float, float, float]],) -> tf.data.Dataset:
+        config: typing.Dict[typing.AnyStr, typing.Any]) -> tf.data.Dataset:
     """
     A function to prepare the dataloader
 
@@ -36,32 +35,28 @@ def prepare_dataloader(
            must correspond to one sequence of past imagery data. The tensors must be generated in the order given
            by ``target_sequences``. The shape of the tf.data.Dataset should be ([None, temporal_seq, 5, crop_size, crop_size], [None, 4])
     """
-    if not config.real:
+    config_dict = config if type(config) == dict else vars(config)
+    if not config_dict['real']:
         opts = Options(
-            image_size=config.crop_size,
+            image_size=config_dict['crop_size'],
             digit_size=28,
-            num_channels=len(config.channels),
-            seq_len=config.seq_len,
+            num_channels=len(config_dict['channels']),
+            seq_len=config_dict['seq_len'],
             step_size=0.3,
-            lat=station[config.station][0],
-            lon=station[config.station][1],
-            alt=station[config.station][2],
+            lat=station[config_dict['station']][0],
+            lon=station[config_dict['station']][1],
+            alt=station[config_dict['station']][2],
             offsets=target_time_offsets
         )
         generator = create_synthetic_generator(opts)
         data_loader = tf.data.Dataset.from_generator(
             generator, (tf.float32, tf.float32)
-        ).batch(config.batch_size)
+        ).batch(config_dict['batch_size'])
     else:
         # First step in the data loading pipeline:
         # A generator object to retrieve a inputs resources and their targets
-        config_dict = {}
-        config_dict['batch_size'] = config.batch_size
-        config_dict['channels'] = config.channels
         config_dict['target_datetimes'] = target_datetimes
         config_dict['goes13_dataset'] = 'hdf516'
-        config_dict['crop_size'] = config.crop_size
-        config_dict['no_of_temporal_seq'] = config.seq_len
 
         generator = create_data_generator(
             dataframe=dataframe,
@@ -76,8 +71,8 @@ def prepare_dataloader(
 
         # Second step: Estimate/Calculate station
         # coordinates on image and crop area dimensions
-        stations_px = get_station_px_center(dataframe, target_stations)
-        if config.crop_size == 0:
+        stations_px = get_station_px_center(dataframe, station)
+        if config_dict['crop_size'] == 0:
             config_dict['crop_size'] = get_crop_size(stations_px, data_loader)
 
         # Third step: Processing using map (cropping for stations)

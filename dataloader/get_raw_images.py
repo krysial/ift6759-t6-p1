@@ -36,7 +36,7 @@ def get_raw_images(
     """
 
     channels = config['channels']
-    seqs = config['no_of_temporal_seq']
+    seqs = config['seq_len']
     goes13_i_paths = get_frames_location(dataframe, datetimes, seqs, config['goes13_dataset'])
     frames = fetch_frames(goes13_i_paths, channels, seqs)
 
@@ -101,7 +101,7 @@ def show_frame(image):
 def _main():
     # expected usage
     app_config = {
-        "no_of_temporal_seq": 5,
+        "seq_len": 5,
         "dataframe_path": "/project/cq-training-1/project1/data/dummy_test_catalog.pkl",
         "channels": ["ch1", "ch2", "ch3", "ch4", "ch6"],
         "goes13_dataset": 'hdf516',
