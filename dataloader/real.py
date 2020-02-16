@@ -29,8 +29,10 @@ def create_data_generator(
         if DEBUGGING:
             pydevd.settrace(suspend=False)
 
-        for i in range(0, len(target_datetimes), config['batch_size']):
-            batch_of_datetimes = target_datetimes[i:i + config['batch_size']]
+        td = dataframe.index if not target_datetimes else target_datetimes
+
+        for i in range(0, len(td), config['batch_size']):
+            batch_of_datetimes = td[i:i + config['batch_size']]
             targets = get_GHI_targets(
                 dataframe,
                 batch_of_datetimes,
@@ -39,6 +41,6 @@ def create_data_generator(
                 config
             )
             images = get_raw_images(dataframe, batch_of_datetimes, config)
-            yield images, targets
+            yield images, targets[:, :len(target_time_offsets)]
 
     return create_generator

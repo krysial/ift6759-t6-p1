@@ -36,8 +36,7 @@ class LRCNModel(BaseModel):
                     32, (8, 8), padding='same',
                     kernel_initializer=initialiser,
                     kernel_regularizer=l2(reg_lambda)
-                ),
-                input_shape=config.input_shape
+                )
             )
         )
         self.sequence.add(TimeDistributed(BatchNormalization()))
@@ -66,8 +65,12 @@ class LRCNModel(BaseModel):
 
         # LSTM output head
         self.sequence.add(TimeDistributed(Flatten()))
-        self.sequence.add(LSTM(16, return_sequences=False, dropout=0.5))
-        self.sequence.add(Dense(len(target_time_offsets), activation='softmax'))
+        self.sequence.add(Dense(512))
+        self.sequence.add(Dense(512))
+        self.sequence.add(LSTM(512, return_sequences=True, dropout=0.3))
+        self.sequence.add(LSTM(512, dropout=0.3))
+        self.sequence.add(Dense(512))
+        self.sequence.add(Dense(len(target_time_offsets)))
 
         return self
 
