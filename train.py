@@ -51,37 +51,45 @@ def main(
     target_time_offsets = [pd.Timedelta(d).to_pytimedelta() for d in admin_config["target_time_offsets"]]
     stations = {config.station: target_stations[config.station]}
 
+<<<<<<< HEAD
     DATASET_LENGTH = len(dataframe)
     STEPS_PER_EPOCH = int(0.9 * DATASET_LENGTH)
     VALIDATION_STEPS = int(0.1 * DATASET_LENGTH)
+=======
+    user_conf = {}
+    user_conf['channels'] = config.channels
+    user_conf['target_datetimes'] = target_datetimes
+    user_conf['goes13_dataset'] = 'hdf516'
+    user_conf['crop_size'] = config.crop_size
+    user_conf['no_of_temporal_seq'] = config.seq_len
+    user_conf['batch_size'] = config.batch_size
+    user_conf['model'] = config.model
+    user_conf['epoch'] = config.epoch
+    user_conf['real'] = config.real
+    user_conf['dataset_size'] = config.dataset_size
+>>>>>>> Updating dataloader to stack seq images as channels for basecnn model
 
     if config.real:
         # real dataloader is expecting a Dict {} object in evaluation
-        dataloader_config = {}
-        dataloader_config['channels'] = config.channels
-        dataloader_config['target_datetimes'] = target_datetimes
-        dataloader_config['goes13_dataset'] = 'hdf516'
-        dataloader_config['crop_size'] = config.crop_size
-        dataloader_config['no_of_temporal_seq'] = config.seq_len
-        dataloader_config['batch_size'] = config.batch_size
+
         prepare_dataloader = dataloader.prepare_dataloader
     else:
         # load synthetic data
         prepare_dataloader = synthetic_dataloader.prepare_dataloader
-        dataloader_config = config
+        user_conf = config
 
     data_loader = prepare_dataloader(
         dataframe,
         target_datetimes,
         stations,
         target_time_offsets,
-        dataloader_config
+        user_conf
     ).prefetch(tf.data.experimental.AUTOTUNE)
 
     model = prepare_model(
         stations,
         target_time_offsets,
-        config
+        user_conf
     )
 
     optimizer = Adam(lr=1e-10, decay=1e-12)
@@ -95,8 +103,8 @@ def main(
         filepath=os.path.join(
             'results',
             'checkpoints',
-            config.model + '-' +
-            'synthetic' if not config.real else 'real' +
+            config['model'] + '-' +
+            'synthetic' if not user_conf['real'] else 'real' +
             '.{epoch:03d}-{val_loss:.3f}.hdf5'
         ),
         verbose=1,
@@ -118,7 +126,7 @@ def main(
 
     # Helper: TensorBoard
     tb = TensorBoard(
-        log_dir=os.path.join('results', 'logs', config.model),
+        log_dir=os.path.join('results', 'logs', user_conf['model']),
         histogram_freq=1,
         write_graph=True,
         write_images=False
@@ -133,18 +141,27 @@ def main(
         os.path.join(
             'results',
             'logs',
-            config.model + '-' + 'training-' + str(timestamp) + '.log'
+            user_conf['model'] + '-' + 'training-' + str(timestamp) + '.log'
         )
     )
 
     model.fit_generator(
         data_loader,
+<<<<<<< HEAD
         epochs=config.epoch,
         use_multiprocessing=True,
         workers=32,
         callbacks=[tb, csv_logger, early_stopper],
         steps_per_epoch=STEPS_PER_EPOCH,
         validation_steps=VALIDATION_STEPS
+=======
+        epochs=user_conf['epoch'],
+        use_multiprocessing=False,
+        workers=0,
+        validation_data=data_loader,
+        steps_per_epoch=0.9 * user_conf['dataset_size'],
+        validation_steps=0.1 * user_conf['dataset_size']
+>>>>>>> Updating dataloader to stack seq images as channels for basecnn model
     )
 
     print(model.summary())
