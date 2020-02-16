@@ -82,7 +82,11 @@ def prepare_dataloader(
             config=config_dict
         )
 
-        data_loader = data_loader.map(data_processor)
+        data_loader = data_loader.map(
+            data_processor
+        ).cache(
+            filename='/project/cq-training-1/project1/teams/team06/cache'
+        )
 
     # Final step of data loading pipeline: Return the dataset loading object
     return data_loader
