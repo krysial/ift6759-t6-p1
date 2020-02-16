@@ -92,7 +92,6 @@ def fetch_frames(frames_df, channels, seqs):
 
 
 def show_frame(image):
-    assert image.shape == (IMAGE_HEIGHT, IMAGE_WIDTH), 'Unexpected frame shape'
     fig, ax = plt.subplots(1)
     ax.imshow(image, cmap='bone')
     plt.show()

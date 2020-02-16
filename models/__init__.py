@@ -3,10 +3,12 @@ import datetime
 import tensorflow as tf
 from models.dummy import DummyModel
 from models.lrcn import LRCNModel
+from models.basecnn import BaseCNNModel
 
 models = {
     "dummy": DummyModel,
-    "lrcn": LRCNModel
+    "lrcn": LRCNModel,
+    "basecnn": BaseCNNModel
 }
 
 

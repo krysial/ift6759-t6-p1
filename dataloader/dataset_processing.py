@@ -38,14 +38,15 @@ def dataset_processing(
         px_x = center[0] + px_offset
         px_y_ = center[1] - px_offset
         px_y = center[1] + px_offset
-        return image_tensor[:, :, :, px_y_:px_y, px_x_:px_x]
+        return image_tensor[:, :, px_y_:px_y, px_x_:px_x]
 
     def processor(image_tensor, target_tensor):
         if DEBUGGING:
             pydevd.settrace(suspend=False)
         # Updated image tensor
         image_tensor_ = crop(image_tensor, list(station.keys())[0])
-        image_tensor_ = tf.transpose(image_tensor_, [0, 1, 3, 4, 2])
+        #image_tensor_ = tf.transpose(image_tensor_, [0, 1, 3, 4, 2])
+        image_tensor_ = tf.transpose(image_tensor_, [0, 2, 3, 1])
 
         # Updated target tensor
         target_tensor_ = target_tensor

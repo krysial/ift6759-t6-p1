@@ -55,12 +55,27 @@ def main(
     STEPS_PER_EPOCH = int(0.9 * DATASET_LENGTH)
     VALIDATION_STEPS = int(0.1 * DATASET_LENGTH)
 
+    if config.real:
+        # real dataloader is expecting a Dict {} object in evaluation
+        dataloader_config = {}
+        dataloader_config['channels'] = config.channels
+        dataloader_config['target_datetimes'] = target_datetimes
+        dataloader_config['goes13_dataset'] = 'hdf516'
+        dataloader_config['crop_size'] = config.crop_size
+        dataloader_config['no_of_temporal_seq'] = config.seq_len
+        dataloader_config['batch_size'] = config.batch_size
+        prepare_dataloader = dataloader.prepare_dataloader
+    else:
+        # load synthetic data
+        prepare_dataloader = synthetic_dataloader.prepare_dataloader
+        dataloader_config = config
+
     data_loader = prepare_dataloader(
         dataframe,
         target_datetimes,
         stations,
         target_time_offsets,
-        config
+        dataloader_config
     ).prefetch(tf.data.experimental.AUTOTUNE)
 
     model = prepare_model(

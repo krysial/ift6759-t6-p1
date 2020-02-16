@@ -4,6 +4,7 @@
     "goes13_dataset": "hdf516",
     "crop_size": 40,
     "seq_len": 6,
+    "no_of_temporal_seq": 6,
     "model": "lrcn",
     "real": true,
     "target": "CLEARSKY_GHI"
