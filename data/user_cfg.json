@@ -6,5 +6,6 @@
     "seq_len": 6,
     "model": "lrcn",
     "real": true,
-    "target": "CLEARSKY_GHI"
+    "target": "CLEARSKY_GHI",
+    "dataset_cache": "/project/cq-training-1/project1/teams/team06/cache"
 }
