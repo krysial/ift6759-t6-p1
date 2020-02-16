@@ -9,6 +9,9 @@ import numpy as np
 import tensorflow as tf
 import tqdm
 
+from dataloader.dataloader import prepare_dataloader
+from models import prepare_model
+
 
 def prepare_dataloader(
         dataframe: pd.DataFrame,
@@ -17,70 +20,13 @@ def prepare_dataloader(
         target_time_offsets: typing.List[datetime.timedelta],
         config: typing.Dict[typing.AnyStr, typing.Any],
 ) -> tf.data.Dataset:
-    """This function should be modified in order to prepare & return your own data loader.
-
-    Note that you can use either the netCDF or HDF5 data. Each iteration over your data loader should return a
-    2-element tuple containing the tensor that should be provided to the model as input, and the target values. In
-    this specific case, you will not be able to provide the latter since the dataframe contains no GHI, and we are
-    only interested in predictions, not training. Therefore, you must return a placeholder (or ``None``) as the second
-    tuple element.
-
-    Reminder: the dataframe contains imagery paths for every possible timestamp requested in ``target_datetimes``.
-    However, we expect that you will use some of the "past" imagery (i.e. imagery at T<=0) for any T in
-    ``target_datetimes``, but you should NEVER rely on "future" imagery to generate predictions (for T>0). We
-    will be inspecting data loader implementations to ensure this is the case, and those who "cheat" will be
-    dramatically penalized.
-
-    See https://github.com/mila-iqia/ift6759/tree/master/projects/project1/evaluation.md for more information.
-
-    Args:
-        dataframe: a pandas dataframe that provides the netCDF file path (or HDF5 file path and offset) for all
-            relevant timestamp values over the test period.
-        target_datetimes: a list of timestamps that your data loader should use to provide imagery for your model.
-            The ordering of this list is important, as each element corresponds to a sequence of GHI values
-            to predict. By definition, the GHI values must be provided for the offsets given by ``target_time_offsets``
-            which are added to each timestamp (T=0) in this datetimes list.
-        stations: a map of station names of interest paired with their coordinates (latitude, longitude, elevation).
-        target_time_offsets: the list of timedeltas to predict GHIs for (by definition: [T=0, T+1h, T+3h, T+6h]).
-        config: configuration dictionary holding any extra parameters that might be required by the user. These
-            parameters are loaded automatically if the user provided a JSON file in their submission. Submitting
-            such a JSON file is completely optional, and this argument can be ignored if not needed.
-
-    Returns:
-        A ``tf.data.Dataset`` object that can be used to produce input tensors for your model. One tensor
-        must correspond to one sequence of past imagery data. The tensors must be generated in the order given
-        by ``target_sequences``.
-    """
-    ################################## MODIFY BELOW ##################################
-    # WE ARE PROVIDING YOU WITH A DUMMY DATA GENERATOR FOR DEMONSTRATION PURPOSES.
-    # MODIFY EVERYTHINGIN IN THIS BLOCK AS YOU SEE FIT
-
-    def dummy_data_generator():
-        """
-        Generate dummy data for the model, only for example purposes.
-        """
-        batch_size = 32
-        image_dim = (64, 64)
-        n_channels = 5
-        output_seq_len = 4
-
-        for i in range(0, len(target_datetimes), batch_size):
-            batch_of_datetimes = target_datetimes[i:i+batch_size]
-            samples = tf.random.uniform(shape=(
-                len(batch_of_datetimes), image_dim[0], image_dim[1], n_channels
-            ))
-            targets = tf.zeros(shape=(
-                len(batch_of_datetimes), output_seq_len
-            ))
-            # Remember that you do not have access to the targets.
-            # Your dataloader should handle this accordingly.
-            yield samples, targets
-
-    data_loader = tf.data.Dataset.from_generator(
-        dummy_data_generator, (tf.float32, tf.float32)
+    data_loader = prepare_dataloader(
+        dataframe,
+        target_datetimes,
+        stations,
+        target_time_offsets,
+        config
     )
-
-    ################################### MODIFY ABOVE ##################################
 
     return data_loader
 
@@ -90,38 +36,12 @@ def prepare_model(
         target_time_offsets: typing.List[datetime.timedelta],
         config: typing.Dict[typing.AnyStr, typing.Any],
 ) -> tf.keras.Model:
-    """This function should be modified in order to prepare & return your own prediction model.
-
-    See https://github.com/mila-iqia/ift6759/tree/master/projects/project1/evaluation.md for more information.
-
-    Args:
-        stations: a map of station names of interest paired with their coordinates (latitude, longitude, elevation).
-        target_time_offsets: the list of timedeltas to predict GHIs for (by definition: [T=0, T+1h, T+3h, T+6h]).
-        config: configuration dictionary holding any extra parameters that might be required by the user. These
-            parameters are loaded automatically if the user provided a JSON file in their submission. Submitting
-            such a JSON file is completely optional, and this argument can be ignored if not needed.
-
-    Returns:
-        A ``tf.keras.Model`` object that can be used to generate new GHI predictions given imagery tensors.
-    """
-
-    ################################### MODIFY BELOW ##################################
-
-    class DummyModel(tf.keras.Model):
-
-      def __init__(self, target_time_offsets):
-        super(DummyModel, self).__init__()
-        self.flatten = tf.keras.layers.Flatten()
-        self.dense1 = tf.keras.layers.Dense(32, activation=tf.nn.relu)
-        self.dense2 = tf.keras.layers.Dense(len(target_time_offsets), activation=tf.nn.softmax)
-
-      def call(self, inputs):
-        x = self.dense1(self.flatten(inputs))
-        return self.dense2(x)
-
-    model = DummyModel(target_time_offsets)
-
-    ################################### MODIFY ABOVE ##################################
+    config.model = 'lrcn'
+    prepare_model(
+        stations,
+        target_time_offsets,
+        config
+    )
 
     return model
 
