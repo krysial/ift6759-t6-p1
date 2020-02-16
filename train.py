@@ -56,8 +56,7 @@ def main(
         target_datetimes,
         stations,
         target_time_offsets,
-        config,
-        target_stations
+        config
     ).prefetch(tf.data.experimental.AUTOTUNE)
 
     model = prepare_model(

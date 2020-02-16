@@ -9,8 +9,8 @@ import numpy as np
 import tensorflow as tf
 import tqdm
 
-from dataloader.dataloader import prepare_dataloader
-from models import prepare_model
+from dataloader.dataloader import prepare_dataloader as prepare_dataloader_t06
+from models import prepare_model as prepare_model_t06
 
 
 def prepare_dataloader(
@@ -20,7 +20,7 @@ def prepare_dataloader(
         target_time_offsets: typing.List[datetime.timedelta],
         config: typing.Dict[typing.AnyStr, typing.Any],
 ) -> tf.data.Dataset:
-    data_loader = prepare_dataloader(
+    data_loader = prepare_dataloader_t06(
         dataframe,
         target_datetimes,
         stations,
@@ -36,8 +36,7 @@ def prepare_model(
         target_time_offsets: typing.List[datetime.timedelta],
         config: typing.Dict[typing.AnyStr, typing.Any],
 ) -> tf.keras.Model:
-    config.model = 'lrcn'
-    prepare_model(
+    model = prepare_model_t06(
         stations,
         target_time_offsets,
         config

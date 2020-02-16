@@ -36,8 +36,7 @@ class LRCNModel(BaseModel):
                     32, (8, 8), padding='same',
                     kernel_initializer=initialiser,
                     kernel_regularizer=l2(reg_lambda)
-                ),
-                input_shape=config.input_shape
+                )
             )
         )
         self.sequence.add(TimeDistributed(BatchNormalization()))
