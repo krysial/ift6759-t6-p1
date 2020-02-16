@@ -201,6 +201,18 @@ if __name__ == "__main__":
         help="path to the JSON config file used to store test set/evaluation parameters"
     )
     parser.add_argument(
+        "--target_past_seq_len",
+        type=int,
+        help="Past sequence length for target (including present)",
+        default=1
+    )
+    parser.add_argument(
+        "--target",
+        type=str,
+        help="target column name. {station}_{target}",
+        default='GHI'
+    )
+    parser.add_argument(
         "input_shape",
         help="input shape of first model layer",
         type=str,
