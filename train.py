@@ -45,8 +45,6 @@ def main(
     if "end_bound" in admin_config:
         dataframe = dataframe[dataframe.index < datetime.datetime.fromisoformat(admin_config["end_bound"])]
 
-    target_datetimes = [datetime.datetime.fromisoformat(d) for d in admin_config["target_datetimes"]]
-    assert target_datetimes and all([d in dataframe.index for d in target_datetimes])
     target_stations = admin_config["stations"]
     target_time_offsets = [pd.Timedelta(d).to_pytimedelta() for d in admin_config["target_time_offsets"]]
     stations = {config.station: target_stations[config.station]}
@@ -57,7 +55,7 @@ def main(
 
     data_loader = prepare_dataloader(
         dataframe,
-        target_datetimes,
+        [],
         stations,
         target_time_offsets,
         config
