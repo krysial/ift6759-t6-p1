@@ -51,6 +51,10 @@ def main(
     target_time_offsets = [pd.Timedelta(d).to_pytimedelta() for d in admin_config["target_time_offsets"]]
     stations = {config.station: target_stations[config.station]}
 
+    DATASET_LENGTH = len(dataframe)
+    STEPS_PER_EPOCH = int(0.9 * DATASET_LENGTH)
+    VALIDATION_STEPS = int(0.1 * DATASET_LENGTH)
+
     data_loader = prepare_dataloader(
         dataframe,
         target_datetimes,
@@ -124,10 +128,9 @@ def main(
         epochs=config.epoch,
         use_multiprocessing=True,
         workers=32,
-        validation_data=data_loader,
         callbacks=[tb, csv_logger, early_stopper],
-        steps_per_epoch=int(0.9 * dataframe.shape[0]),
-        validation_steps=int(0.1 * dataframe.shape[0])
+        steps_per_epoch=STEPS_PER_EPOCH,
+        validation_steps=VALIDATION_STEPS
     )
 
     print(model.summary())
