@@ -66,9 +66,10 @@ class LRCNModel(BaseModel):
 
         # LSTM output head
         self.sequence.add(TimeDistributed(Flatten()))
+        self.sequence.add(Dense(512))
+        self.sequence.add(Dense(512))
         self.sequence.add(LSTM(512, return_sequences=True, dropout=0.3))
         self.sequence.add(LSTM(512, dropout=0.3))
-        self.sequence.add(Dense(512))
         self.sequence.add(Dense(512))
         self.sequence.add(Dense(len(target_time_offsets)))
 
