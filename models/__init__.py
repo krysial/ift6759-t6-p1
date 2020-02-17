@@ -3,10 +3,14 @@ import datetime
 import tensorflow as tf
 from models.dummy import DummyModel
 from models.lrcn import LRCNModel
+from models.conv3d import Conv3DModel
+from models.convlstm import ConvLSTMModel
 
 models = {
     "dummy": DummyModel,
-    "lrcn": LRCNModel
+    "lrcn": LRCNModel,
+    "conv3d": Conv3DModel,
+    "convlstm": ConvLSTMModel,
 }
 
 
