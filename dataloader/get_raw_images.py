@@ -96,32 +96,3 @@ def show_frame(image):
     ax.imshow(image, cmap='bone')
     plt.show()
 
-
-def _main():
-    # expected usage
-    app_config = {
-        "seq_len": 5,
-        "dataframe_path": "/project/cq-training-1/project1/data/dummy_test_catalog.pkl",
-        "channels": ["ch1", "ch2", "ch3", "ch4", "ch6"],
-        "goes13_dataset": 'hdf516',
-        "target_datetimes": [
-            "2015-01-01T12:45:00",
-            "2015-01-01T19:00:00",
-            "2015-01-02T13:30:00",
-            "2015-01-02T19:45:00"
-        ]
-    }
-    dataframe_path = app_config['dataframe_path']
-    catalog = pd.read_pickle(dataframe_path)
-    batch_of_datetimes = [dt.datetime.strptime(i, DT_FORMAT) for i in app_config['target_datetimes']]
-
-    raw_images = get_raw_images(catalog, batch_of_datetimes, app_config)
-
-    for i in range(app_config["no_of_temporal_seq"]):
-        show_frame(raw_images[1, i, 0])
-
-    print('Done!')
-
-
-if __name__ == "__main__":
-    _main()
