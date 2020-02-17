@@ -71,7 +71,7 @@ class LRCNModel(BaseModel):
         self.sequence = Sequential()
         self.sequence.add(Concatenate(axis=-1))
         self.sequence.add(Dense(512))
-        self.sequence.add(LSTM(512, return_sequences=True, dropout=0.3))
+        self.sequence.add(LSTM(512, dropout=0.3))
         self.sequence.add(Dense(512))
         self.sequence.add(Dense(len(target_time_offsets)))
 
