@@ -138,7 +138,7 @@ def main(
         )
     )
 
-    model.fit(
+    model.fit_generator(
         data_loader,
         epochs=user_config['epoch'],
         use_multiprocessing=True,
