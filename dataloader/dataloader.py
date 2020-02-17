@@ -50,7 +50,10 @@ def prepare_dataloader(
         )
         generator = create_synthetic_generator(opts)
         data_loader = tf.data.Dataset.from_generator(
-            generator, (tf.float32, tf.float32)
+            generator, ({
+                'images': tf.float32,
+                'clearsky': tf.float32,
+            }, tf.float32)
         ).batch(config_dict['batch_size'])
     else:
         # First step in the data loading pipeline:

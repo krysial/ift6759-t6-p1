@@ -38,6 +38,7 @@ class SyntheticGHIProcessor(object):
 
     def processData(self, _data):
         results = []
+        clear_ghi = []
         max_offset = self.opts.offsets[-1]
         solar_power = np.random.randint(70, high=100) / 100
 
@@ -56,7 +57,8 @@ class SyntheticGHIProcessor(object):
             )
 
             results.append(ghi * cloudness)
+            clear_ghi.append(ghi)
 
         self.count += 1
 
-        return results
+        return results, clear_ghi
