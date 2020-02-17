@@ -62,7 +62,6 @@ def prepare_dataloader(
     )
 
     data_loader = data_loader.map(crop_image_fn, num_parallel_calls=tf.data.experimental.AUTOTUNE)
-    data_loader = data_loader.map(dataset_concat_seq_images, num_parallel_calls=tf.data.experimental.AUTOTUNE)
     data_loader = data_loader.batch(config['batch_size'])
 
     # Final step of data loading pipeline: Return the dataset loading object

@@ -17,17 +17,20 @@ def prepare_dataloader(
 
 
         opts = Options(
-            image_size=config.crop_size,
+            image_size=config['crop_size'],
             digit_size=28,
-            num_channels=len(config.channels),
-            seq_len=config.seq_len,
+            num_channels=len(config['channels']),
+            seq_len=config['seq_len'],
             step_size=0.3,
-            lat=station[config.station][0],
-            lon=station[config.station][1],
-            alt=station[config.station][2],
+            lat=station[config['station']][0],
+            lon=station[config['station']][1],
+            alt=station[config['station']][2],
             offsets=target_time_offsets
         )
         generator = create_synthetic_generator(opts)
         data_loader = tf.data.Dataset.from_generator(
-            generator, (tf.float32, tf.float32)
-        ).batch(config.batch_size)
+            generator, output_types=(tf.float32, tf.float32),
+            output_shapes=((opts.seq_len, opts.image_size, opts.image_size, opts.num_channels), (len(opts.offsets),))
+        ).batch(config['batch_size'])
+
+        return data_loader
