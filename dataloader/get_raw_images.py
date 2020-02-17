@@ -95,4 +95,3 @@ def show_frame(image):
     fig, ax = plt.subplots(1)
     ax.imshow(image, cmap='bone')
     plt.show()
-

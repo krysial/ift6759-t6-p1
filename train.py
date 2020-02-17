@@ -141,8 +141,8 @@ def main(
     model.fit(
         data_loader,
         epochs=user_config['epoch'],
-        use_multiprocessing=False,
-        workers=0,
+        use_multiprocessing=True,
+        workers=32,
         callbacks=[tb, csv_logger, early_stopper],
         steps_per_epoch=STEPS_PER_EPOCH,
         validation_data=data_loader,
