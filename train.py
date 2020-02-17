@@ -52,8 +52,8 @@ def main(
     stations = {config.station: target_stations[config.station]}
 
     DATASET_LENGTH = len(dataframe)
-    STEPS_PER_EPOCH = int(0.9 * DATASET_LENGTH)
-    VALIDATION_STEPS = int(0.1 * DATASET_LENGTH)
+    STEPS_PER_EPOCH = int(0.8 * DATASET_LENGTH)//config.batch_size
+    VALIDATION_STEPS = int(0.2 * DATASET_LENGTH)//config.batch_size
 
     data_loader = prepare_dataloader(
         dataframe,
@@ -101,16 +101,6 @@ def main(
     #     def on_test_batch_end(self, batch, logs=None):
     #         print('Evaluating: batch {} ends at {}'.format(batch, datetime.datetime.now().time()))
 
-    # Helper: TensorBoard
-    tb = TensorBoard(
-        log_dir=os.path.join('results', 'logs', config.model),
-        histogram_freq=1,
-        write_graph=True,
-        write_images=False
-    )
-
-    # Helper: Stop when we stop learning.
-    early_stopper = EarlyStopping(patience=5)
 
     # Helper: Save results.
     timestamp = time.time()
@@ -122,14 +112,25 @@ def main(
         )
     )
 
+    # Helper: TensorBoard
+    tb = TensorBoard(
+        log_dir=os.path.join('results', 'logs', str(config.model)+"_"+str(timestamp)),
+        histogram_freq=1,
+        write_graph=True,
+        write_images=False
+    )
+
+    # Helper: Stop when we stop learning.
+    early_stopper = EarlyStopping(patience=5)
+
     model.fit_generator(
         data_loader,
         epochs=config.epoch,
         use_multiprocessing=True,
         workers=32,
-        callbacks=[tb, csv_logger, early_stopper],
         steps_per_epoch=STEPS_PER_EPOCH,
-        validation_steps=VALIDATION_STEPS
+        validation_steps=VALIDATION_STEPS,
+        callbacks=[tb],
     )
 
     print(model.summary())
