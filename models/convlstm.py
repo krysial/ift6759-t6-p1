@@ -24,35 +24,35 @@ class ConvLSTMModel(BaseModel):
 
         self.sequece = Sequential()
         self.sequece.add(BatchNormalization())
-        self.sequece.add(ConvLSTM2D(filters=64, 
-                 kernel_size=(3, 3),
-                 activation='relu',
-                 padding='valid', return_sequences=True))
+        self.sequece.add(ConvLSTM2D(filters=64,
+                                    kernel_size=(3, 3),
+                                    activation='relu',
+                                    padding='valid', return_sequences=True))
 
         for _ in range(config.seq_len - 4):
             self.sequece.add(BatchNormalization())
             self.sequece.add(MaxPooling3D(pool_size=(1, 2, 2), strides=(1, 2, 2)))
             self.sequece.add(Dropout(0.33))
-            self.sequece.add(ConvLSTM2D(filters=64*2**(_//2), 
-                 kernel_size=(3, 3),
-                 activation='relu',
-                 padding='same', return_sequences=True))
+            self.sequece.add(ConvLSTM2D(filters=64 * 2**(_ // 2),
+                                        kernel_size=(3, 3),
+                                        activation='relu',
+                                        padding='same', return_sequences=True))
 
         self.sequece.add(BatchNormalization())
         self.sequece.add(MaxPooling3D(pool_size=(1, 2, 2), strides=(1, 2, 2)))
         self.sequece.add(Dropout(0.33))
-        self.sequece.add(ConvLSTM2D(filters=64*2**((_+1)), 
-                 kernel_size=(3, 3),
-                 activation='relu',
-                 padding='same', return_sequences=True))
+        self.sequece.add(ConvLSTM2D(filters=64 * 2**((_ + 1)),
+                                    kernel_size=(3, 3),
+                                    activation='relu',
+                                    padding='same', return_sequences=True))
 
         self.sequece.add(BatchNormalization())
         self.sequece.add(MaxPooling3D(pool_size=(1, 3, 3), strides=(1, 2, 2)))
         self.sequece.add(Dropout(0.33))
-        self.sequece.add(ConvLSTM2D(filters=64*2**((_+2)), 
-                 kernel_size=(3, 3),
-                 activation='relu',
-                 padding='same', return_sequences=True))
+        self.sequece.add(ConvLSTM2D(filters=64 * 2**((_ + 2)),
+                                    kernel_size=(3, 3),
+                                    activation='relu',
+                                    padding='same', return_sequences=True))
 
         self.sequece.add(TimeDistributed(Flatten(), name='TD.Flatten'))
         self.sequece.add(TimeDistributed(BatchNormalization(), name='TD.BN1'))
