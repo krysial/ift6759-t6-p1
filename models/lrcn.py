@@ -66,11 +66,12 @@ class LRCNModel(BaseModel):
 
         # LSTM output head
         self.conv2DPipe.add(TimeDistributed(Flatten()))
-        self.extraFeatures = RepeatVector(config.seq_len)
+        self.extraFeatures = Sequential()
+        self.extraFeatures.add(RepeatVector(config.seq_len))
+        self.extraFeatures.add(Dense(1012))
 
         self.sequence = Sequential()
         self.sequence.add(Concatenate(axis=-1))
-        self.sequence.add(Dense(512))
         self.sequence.add(LSTM(512, dropout=0.3))
         self.sequence.add(Dense(512))
         self.sequence.add(Dense(len(target_time_offsets)))
