@@ -15,7 +15,7 @@ def prepare_model(
         target_time_offsets: typing.List[datetime.timedelta],
         config: typing.Dict[typing.AnyStr, typing.Any],
 ) -> tf.keras.Model:
-    return models[config["model"]].create(
+    return models[config.model].create(
         stations,
         target_time_offsets,
         config
