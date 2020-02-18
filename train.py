@@ -101,17 +101,6 @@ def main(
     #     def on_test_batch_end(self, batch, logs=None):
     #         print('Evaluating: batch {} ends at {}'.format(batch, datetime.datetime.now().time()))
 
-    # Helper: TensorBoard
-    tb = TensorBoard(
-        log_dir=os.path.join('results', 'logs', config.model),
-        histogram_freq=1,
-        write_graph=True,
-        write_images=False
-    )
-
-    # Helper: Stop when we stop learning.
-    early_stopper = EarlyStopping(patience=5)
-
     # Helper: Save results.
     timestamp = time.time()
     csv_logger = CSVLogger(
@@ -122,12 +111,28 @@ def main(
         )
     )
 
+    # Helper: TensorBoard
+    tb = TensorBoard(
+        log_dir=os.path.join('results', 'logs', str(timestamp) + "_" + config.model),
+        histogram_freq=1,
+        write_graph=True,
+        write_images=False
+    )
+
+    # Helper: Stop when we stop learning.
+    early_stopper = EarlyStopping(patience=5)
+
+    checkpoint = ModelCheckpoint(
+        os.path.join('results', 'checkpoints', str(timestamp) + "_" + config.model + "_{epoch:02d}_loss.hdf5"),
+        monitor='val_loss', verbose=0, save_best_only=True,
+        save_weights_only=False, mode='auto', period=1)
+
     model.fit_generator(
         data_loader,
         epochs=config.epoch,
         use_multiprocessing=True,
         workers=32,
-        callbacks=[tb, csv_logger, early_stopper],
+        callbacks=[tb, csv_logger],
         steps_per_epoch=STEPS_PER_EPOCH,
         validation_steps=VALIDATION_STEPS
     )
