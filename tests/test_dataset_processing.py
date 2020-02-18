@@ -38,7 +38,7 @@ def stations_px():
 
 
 @pytest.fixture
-def image(config):
+def data(config):
     img = tf.random.uniform((config['seq_len'], len(config['channels']), 650, 1500))
     return {'images': img}
 
@@ -49,54 +49,54 @@ def target(config):
     return tgt
 
 
-def test_sanity_check1(image, target, stations_px, station, config):
-    data, tgt = dataset_processing(stations_px, station, config)(image, target)
+def test_sanity_check1(data, target, stations_px, station, config):
+    data, tgt = dataset_processing(stations_px, station, config)(data, target)
     img = data['images']
     assert isinstance(img, tf.Tensor) and isinstance(tgt, tf.Tensor)
 
 
-def test_output_image_dims(image, target, stations_px, station, config):
-    data, tgt = dataset_processing(stations_px, station, config)(image, target)
+def test_output_image_dims(data, target, stations_px, station, config):
+    data, tgt = dataset_processing(stations_px, station, config)(data, target)
     img = data['images']
     assert img.ndim == image['images'].ndim
 
 
-def test_output_target_dims(image, target, stations_px, station, config):
-    data, tgt = dataset_processing(stations_px, station, config)(image, target)
+def test_output_target_dims(data, target, stations_px, station, config):
+    data, tgt = dataset_processing(stations_px, station, config)(data, target)
     img = data['images']
     assert tgt.ndim == target.ndim
 
 # TODO: Commented out due to that the batch is not longer handled here
-# def test_equal_batchsize_image_to_target(image, target, stations_px, station, config):
-#     img, tgt = dataset_processing(stations_px, station, config)(image, target)
+# def test_equal_batchsize_image_to_target(data, target, stations_px, station, config):
+#     img, tgt = dataset_processing(stations_px, station, config)(data, target)
 #     assert img.shape[0] == tgt.shape[0]
 
 
-def test_equal_batchsize_input_to_output(image, target, stations_px, station, config):
-    data, tgt = dataset_processing(stations_px, station, config)(image, target)
+def test_equal_batchsize_input_to_output(data, target, stations_px, station, config):
+    data, tgt = dataset_processing(stations_px, station, config)(data, target)
     img = data['images']
     assert (image['images'].shape[0] == img.shape[0]) and (target.shape[0] == tgt.shape[0])
 
 
-def test_equal_seqlen_input_to_output(image, target, stations_px, station, config):
-    data, tgt = dataset_processing(stations_px, station, config)(image, target)
+def test_equal_seqlen_input_to_output(data, target, stations_px, station, config):
+    data, tgt = dataset_processing(stations_px, station, config)(data, target)
     img = data['images']
     assert (image['images'].shape[0] == img.shape[0])
 
 
-def test_equal_channel_input_to_output(image, target, stations_px, station, config):
+def test_equal_channel_input_to_output(data, target, stations_px, station, config):
     data, tgt = dataset_processing(stations_px, station, config)(image.copy(), target)
     img = data['images']
     assert (image['images'].shape[1] == img.shape[-1])
 
 
-def test_img_nan_generation_in_process(image, target, stations_px, station, config):
-    data, tgt = dataset_processing(stations_px, station, config)(image, target)
+def test_img_nan_generation_in_process(data, target, stations_px, station, config):
+    data, tgt = dataset_processing(stations_px, station, config)(data, target)
     img = data['images']
     assert (tf.math.is_nan(img).numpy().any()) == (tf.math.is_nan(image['images']).numpy().any())
 
 
-def test_target_sequence_input_to_output_check(image, target, stations_px, station, config):
-    data, tgt = dataset_processing(stations_px, station, config)(image, target)
+def test_target_sequence_input_to_output_check(data, target, stations_px, station, config):
+    data, tgt = dataset_processing(stations_px, station, config)(data, target)
     img = data['images']
     assert (target.shape[-1] == tgt.shape[-1])
