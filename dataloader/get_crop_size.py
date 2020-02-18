@@ -21,10 +21,9 @@ def get_crop_size(
         A util function to extract and return image dimensions from data_loader
         """
 
-        for data in data_loader:
-            image, target = data
+        for data, target in data_loader:
             break
-        L, B = image.shape[-2:]
+        L, B = data['images'].shape[-2:]
         return L, B
 
     # station coordinates and image dimensions

@@ -30,21 +30,24 @@ def dataset_processing(
         px_y = center[1] + px_offset
         return image_tensor[:, :, px_y_:px_y, px_x_:px_x]
 
-    def processor(image_tensor, target_tensor):
+    def processor(data, target_tensor):
         # Updated image tensor
-        image_tensor_ = crop(image_tensor, list(station.keys())[0])
+        image_tensor_ = crop(data['images'], list(station.keys())[0])
         image_tensor_ = tf.transpose(image_tensor_, [0, 2, 3, 1])
 
         # Updated target tensor
         target_tensor_ = target_tensor
 
-        return image_tensor_, target_tensor_
+        data['images'] = image_tensor_
+        return data, target_tensor_
 
     return processor
 
 
-def dataset_concat_seq_images(image_tensor, target_tensor):
-    image_tensor_t = tf.transpose(image_tensor, [1, 2, 0, 3])
+def dataset_concat_seq_images(data, target_tensor):
+    image_tensor_t = tf.transpose(data['images'], [1, 2, 0, 3])
     sh = image_tensor_t.shape
     concatenated = tf.reshape(image_tensor_t, shape=[sh[0], sh[1], sh[2] * sh[3]])
-    return concatenated, target_tensor
+
+    data['images'] = concatenated
+    return data, target_tensor

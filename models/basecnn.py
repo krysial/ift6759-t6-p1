@@ -26,4 +26,4 @@ class BaseCNNModel(tf.keras.Model):
         return self
 
     def call(self, inputs):
-        return self.cnn_model(inputs)
+        return self.cnn_model(inputs['images'])
