@@ -130,6 +130,7 @@ def main(
         workers=32,
         steps_per_epoch=STEPS_PER_EPOCH,
         validation_steps=VALIDATION_STEPS,
+        validation_data=data_loader,
         callbacks=[tb],
     )
 
