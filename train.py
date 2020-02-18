@@ -233,6 +233,18 @@ if __name__ == "__main__":
         help="stack seq images as channels in output tensor",
         default=False
     )
+    parser.add_argument(
+        "--target_past_len",
+        type=int,
+        help="past number of targets to append to target output",
+        default=1
+    )
+    parser.add_argument(
+        "--target_name",
+        type=str,
+        help="past target name to append",
+        default="GHI"
+    )
     args = parser.parse_args()
 
     main(
