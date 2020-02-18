@@ -52,8 +52,8 @@ def main(
     stations = {config.station: target_stations[config.station]}
 
     DATASET_LENGTH = len(dataframe)
-    STEPS_PER_EPOCH = int(0.8 * DATASET_LENGTH)//config.batch_size
-    VALIDATION_STEPS = int(0.2 * DATASET_LENGTH)//config.batch_size
+    STEPS_PER_EPOCH = int(0.8 * DATASET_LENGTH) // config.batch_size
+    VALIDATION_STEPS = int(0.2 * DATASET_LENGTH) // config.batch_size
 
     data_loader = prepare_dataloader(
         dataframe,
@@ -101,7 +101,6 @@ def main(
     #     def on_test_batch_end(self, batch, logs=None):
     #         print('Evaluating: batch {} ends at {}'.format(batch, datetime.datetime.now().time()))
 
-
     # Helper: Save results.
     timestamp = time.time()
     csv_logger = CSVLogger(
@@ -114,7 +113,7 @@ def main(
 
     # Helper: TensorBoard
     tb = TensorBoard(
-        log_dir=os.path.join('results', 'logs', str(config.model)+"_"+str(timestamp)),
+        log_dir=os.path.join('results', 'logs', str(config.model) + "_" + str(timestamp)),
         histogram_freq=1,
         write_graph=True,
         write_images=False
