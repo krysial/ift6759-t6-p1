@@ -3,10 +3,12 @@ import datetime
 import tensorflow as tf
 from models.dummy import DummyModel
 from models.lrcn import LRCNModel
+from models.basecnn import BaseCNNModel
 
 models = {
     "dummy": DummyModel,
-    "lrcn": LRCNModel
+    "lrcn": LRCNModel,
+    "basecnn": BaseCNNModel
 }
 
 
@@ -15,9 +17,7 @@ def prepare_model(
         target_time_offsets: typing.List[datetime.timedelta],
         config: typing.Dict[typing.AnyStr, typing.Any],
 ) -> tf.keras.Model:
-    config_dict = config if type(config) == dict else vars(config)
-
-    return models[config_dict["model"]].create(
+    return models[config['model']].create(
         stations,
         target_time_offsets,
         config

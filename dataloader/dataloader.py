@@ -7,10 +7,9 @@ import functools
 import typing
 
 from dataloader.get_crop_size import get_crop_size
-from dataloader.dataset_processing import dataset_processing
+from dataloader.dataset_processing import dataset_processing, dataset_concat_seq_images
 from dataloader.real import create_data_generator
 from dataloader.get_station_px_center import get_station_px_center
-from dataloader.synthetic import create_synthetic_generator, Options
 
 
 def prepare_dataloader(
@@ -35,57 +34,41 @@ def prepare_dataloader(
            must correspond to one sequence of past imagery data. The tensors must be generated in the order given
            by ``target_sequences``. The shape of the tf.data.Dataset should be ([None, temporal_seq, 5, crop_size, crop_size], [None, 4])
     """
-    config_dict = config if type(config) == dict else vars(config)
-    if not config_dict['real']:
-        opts = Options(
-            image_size=config_dict['crop_size'],
-            digit_size=28,
-            num_channels=len(config_dict['channels']),
-            seq_len=config_dict['seq_len'],
-            step_size=0.3,
-            lat=station[config_dict['station']][0],
-            lon=station[config_dict['station']][1],
-            alt=station[config_dict['station']][2],
-            offsets=target_time_offsets
-        )
-        generator = create_synthetic_generator(opts)
-        data_loader = tf.data.Dataset.from_generator(
-            generator, ({
-                'images': tf.float32,
-                'clearsky': tf.float32,
-            }, tf.float32)
-        ).batch(config_dict['batch_size'])
-    else:
-        # First step in the data loading pipeline:
-        # A generator object to retrieve a inputs resources and their targets
-        config_dict['target_datetimes'] = target_datetimes
-        config_dict['goes13_dataset'] = 'hdf516'
 
-        generator = create_data_generator(
-            dataframe=dataframe,
-            target_datetimes=target_datetimes,
-            station=station,
-            target_time_offsets=target_time_offsets,
-            config=config_dict
-        )
+    generator = create_data_generator(
+        dataframe=dataframe,
+        target_datetimes=target_datetimes,
+        station=station,
+        target_time_offsets=target_time_offsets,
+        config=config
+    )
 
-        data_loader = tf.data.Dataset.from_generator(
-            generator, (tf.float32, tf.float32))
+    # output_shapes = (seq_len, channels, height, width)
+    data_loader = tf.data.Dataset.from_generator(
+        generator, ({
+            'images': tf.float32,
+            'clearsky': tf.float32,
+        }, tf.float32)
+    )
 
-        # Second step: Estimate/Calculate station
-        # coordinates on image and crop area dimensions
-        stations_px = get_station_px_center(dataframe, station)
-        if config_dict['crop_size'] == 0:
-            config_dict['crop_size'] = get_crop_size(stations_px, data_loader)
+    # Second step: Estimate/Calculate station
+    # coordinates on image and crop area dimensions
+    stations_px = get_station_px_center(dataframe, station)
+    if config['crop_size'] is None or config['crop_size'] == 0:
+        config['crop_size'] = get_crop_size(stations_px, data_loader)
 
-        # Third step: Processing using map (cropping for stations)
-        data_processor = dataset_processing(
-            stations_px=stations_px,
-            station=station,
-            config=config_dict
-        )
+    # Third step: Processing using map (cropping for stations)
+    crop_image_fn = dataset_processing(
+        stations_px=stations_px,
+        station=station,
+        config=config
+    )
 
-        data_loader = data_loader.map(data_processor)
+    data_loader = data_loader.map(crop_image_fn, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+    if config['stack_seqs']:
+        data_loader = data_loader.map(dataset_concat_seq_images, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+
+    data_loader = data_loader.batch(config['batch_size'])
 
     # Final step of data loading pipeline: Return the dataset loading object
     return data_loader

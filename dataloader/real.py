@@ -1,6 +1,7 @@
 import pandas as pd
 import typing
 import datetime
+import numpy as np
 
 from dataloader.get_GHI_targets import get_GHI_targets
 from dataloader.get_raw_images import get_raw_images
@@ -29,16 +30,15 @@ def create_data_generator(
         if DEBUGGING:
             pydevd.settrace(suspend=False)
 
-        for i in range(0, len(target_datetimes), config['batch_size']):
-            batch_of_datetimes = target_datetimes[i:i + config['batch_size']]
+        for i, datetime in enumerate(target_datetimes):
             targets = get_GHI_targets(
                 dataframe,
-                batch_of_datetimes,
+                [datetime],
                 station,
                 target_time_offsets,
                 config
             )
-            images = get_raw_images(dataframe, batch_of_datetimes, config)
-            yield images, targets
+            images = get_raw_images(dataframe, [datetime], config)
+            yield images[0], targets[0]
 
     return create_generator
