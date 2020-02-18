@@ -52,8 +52,8 @@ def main(
     stations = {config.station: target_stations[config.station]}
 
     DATASET_LENGTH = len(dataframe)
-    STEPS_PER_EPOCH = int(0.8 * DATASET_LENGTH)
-    VALIDATION_STEPS = int(0.2 * DATASET_LENGTH)
+    STEPS_PER_EPOCH = int(0.8 * DATASET_LENGTH) // config.batch_size
+    VALIDATION_STEPS = int(0.2 * DATASET_LENGTH) // config.batch_size
 
     data_loader = prepare_dataloader(
         dataframe,
