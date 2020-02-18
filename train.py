@@ -118,12 +118,15 @@ def main(
         os.path.join(
             'results',
             'logs',
+            config.model,
+            'backups',
             config.model + '-' + 'training-' + str(timestamp) + '.log'
         )
     )
 
     model.fit_generator(
         data_loader,
+        validation_data=data_loader,
         epochs=config.epoch,
         use_multiprocessing=True,
         workers=32,
