@@ -29,7 +29,7 @@ class ConvLSTMModel(BaseModel):
                  activation='relu',
                  padding='valid', return_sequences=True))
 
-        for _ in range(config.seq_len - 2):
+        for _ in range(config.seq_len - 4):
             self.sequece.add(BatchNormalization())
             self.sequece.add(MaxPooling3D(pool_size=(1, 2, 2), strides=(1, 2, 2)))
             self.sequece.add(Dropout(0.33))
