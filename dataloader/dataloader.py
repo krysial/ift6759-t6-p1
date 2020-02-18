@@ -43,10 +43,11 @@ def prepare_dataloader(
         config=config
     )
 
+    # output_shapes = (seq_len, channels, height, width)
     data_loader = tf.data.Dataset.from_generator(
         generator,
-        output_types=(tf.float32, tf.float32),
-        output_shapes=((config["no_of_temporal_seq"], len(config['channels']), 650, 1500), len(target_time_offsets)))
+        output_types=(tf.float32, tf.float32)
+    )
 
     # Second step: Estimate/Calculate station
     # coordinates on image and crop area dimensions

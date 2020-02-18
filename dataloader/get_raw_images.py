@@ -36,7 +36,7 @@ def get_raw_images(
     """
 
     channels = config['channels']
-    seqs = config['no_of_temporal_seq']
+    seqs = config['seq_len']
     goes13_i_paths = get_frames_location(dataframe, datetimes, seqs, config['goes13_dataset'])
     frames = fetch_frames(goes13_i_paths, channels, seqs)
 

@@ -10,7 +10,7 @@ h5_test_file = './data/2015.02.19.0800.h5'
 
 DT_FORMAT = '%Y-%m-%dT%H:%M:%S'
 app_config = {
-    "no_of_temporal_seq": 5,
+    "seq_len": 5,
     "channels": ["ch1", "ch2", "ch3", "ch4", "ch6"],
     "goes13_dataset": 'hdf516',
     "target_datetimes": [

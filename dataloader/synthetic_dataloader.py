@@ -28,8 +28,7 @@ def prepare_dataloader(
     )
     generator = create_synthetic_generator(opts)
     data_loader = tf.data.Dataset.from_generator(
-        generator, output_types=(tf.float32, tf.float32),
-        output_shapes=((opts.seq_len, opts.image_size, opts.image_size, opts.num_channels), (len(opts.offsets),))
+        generator, output_types=(tf.float32, tf.float32)
     ).batch(config['batch_size'])
 
     return data_loader

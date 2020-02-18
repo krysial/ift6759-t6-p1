@@ -21,10 +21,10 @@ def get_GHI_targets(
         offsets: list of target time offsets (timedelta objects) (by definition: [T=0, T+1h, T+3h, T+6h]).
         config: configuration dictionary holding any extra parameters that might be required for tuning purposes.
     Returns:
-        A 2D NumPy array of GHI values, of size [#datetimes, #offsets + config['seq_len'] - 1].
+        A 2D NumPy array of GHI values, of size [#datetimes, #offsets + config['target_past_len'] - 1].
     """
     # Add past images (if any) as offsets
-    for i in range(config['seq_len'] - 1):
+    for i in range(config['target_past_len'] - 1):
         offsets.insert(0, timedelta(minutes=-(i + 1) * 15))
 
     # Initialize target array
@@ -42,7 +42,7 @@ def get_GHI_targets(
             # Get target value at time "t"
             # If target value is an invalid type or does not exist, pass
             try:
-                ghi = df.loc[t][f"{station}_{config['target']}"]
+                ghi = df.loc[t][f"{station}_{config['target_name']}"]
                 assert isinstance(ghi, np.float64)
             except (AssertionError, KeyError):
                 pass
@@ -69,7 +69,7 @@ if __name__ == '__main__':
     offsets = [timedelta(hours=int(x[4])) for x in offsets]
 
     # Configuration dictionary
-    config = {'target': 'GHI', 'seq_len': 1}
+    config = {'target_name': 'GHI', 'target_past_len': 1}
 
     # Call function and print results
     targets = get_GHI_targets(df, datetimes, station, offsets, config)
