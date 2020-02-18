@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --time=7:00:00
 #SBATCH --gres=gpu:k80:1
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=2
 #SBATCH --mem=5G
 #SBATCH -o ./results/slurm-%A_%a.out # STDOUT
 
