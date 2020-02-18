@@ -21,9 +21,9 @@ def prepare_dataloader(
         num_channels=len(config['channels']),
         seq_len=config['seq_len'],
         step_size=0.3,
-        lat=station[config['station']][0],
-        lon=station[config['station']][1],
-        alt=station[config['station']][2],
+        lat=station['BND'][0],
+        lon=station['BND'][1],
+        alt=station['BND'][2],
         offsets=target_time_offsets
     )
     generator = create_synthetic_generator(opts)

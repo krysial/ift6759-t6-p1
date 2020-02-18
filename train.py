@@ -155,12 +155,6 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--station",
-        type=str,
-        help="station to train on",
-        default="BND"
-    )
-    parser.add_argument(
         "--real",
         action='store_true',
         help="train on synthetic mnist data",

@@ -76,7 +76,6 @@ def test_equal_batchsize_input_to_output(image, target, stations_px, station, co
 
 def test_equal_seqlen_input_to_output(image, target, stations_px, station, config):
     img, tgt = dataset_processing(stations_px, station, config)(image, target)
-    print(img, tgt)
     assert (image.shape[0] == img.shape[0])
 
 

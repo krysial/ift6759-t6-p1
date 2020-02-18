@@ -12,6 +12,8 @@ import os
 
 from unittest import mock
 from dataloader.dataloader import *
+from dataloader.synthetic_dataloader \
+    import prepare_dataloader as s_prepare_dataloader
 
 
 @pytest.fixture
@@ -108,11 +110,10 @@ def test_dataloader_synthetic(dataframe, target_datetimes,
                               config_synthetic,
                               # target_stations
                               ):
-    dl = prepare_dataloader(dataframe, target_datetimes,
-                            station, target_time_offsets,
-                            config_synthetic,
-                            # target_stations
-                            )
+    dl = s_prepare_dataloader(
+        dataframe, target_datetimes, station, target_time_offsets,
+        config_synthetic
+    )
     assert isinstance(dl, tf.data.Dataset)
 
 
@@ -153,11 +154,10 @@ def test_dataloader_synthetic_img_ndims(dataframe, target_datetimes,
                                         config_synthetic,
                                         # target_stations
                                         ):
-    dl = prepare_dataloader(dataframe, target_datetimes,
-                            station, target_time_offsets,
-                            config_synthetic,
-                            # target_stations
-                            )
+    dl = s_prepare_dataloader(
+        dataframe, target_datetimes, station, target_time_offsets,
+        config_synthetic
+    )
     for img, tgt in dl:
         break
     assert img.ndim == 5
@@ -168,11 +168,10 @@ def test_dataloader_synthetic_tgt_ndims(dataframe, target_datetimes,
                                         config_synthetic,
                                         # target_stations
                                         ):
-    dl = prepare_dataloader(dataframe, target_datetimes,
-                            station, target_time_offsets,
-                            config_synthetic,
-                            # target_stations
-                            )
+    dl = s_prepare_dataloader(
+        dataframe, target_datetimes, station, target_time_offsets,
+        config_synthetic
+    )
     for img, tgt in dl:
         break
     assert tgt.ndim == 2
@@ -200,11 +199,11 @@ def test_dataloader_synthetic_batch_size_check(dataframe, target_datetimes,
                                                config_synthetic,
                                                # target_stations
                                                ):
-    dl = prepare_dataloader(dataframe, target_datetimes,
-                            station, target_time_offsets,
-                            config_synthetic,
-                            # target_stations
-                            )
+    dl = s_prepare_dataloader(
+        dataframe, target_datetimes, station, target_time_offsets,
+        config_synthetic
+    )
+
     for img, tgt in dl:
         break
     assert img.shape[0] == config_synthetic["batch_size"]
@@ -232,11 +231,11 @@ def test_dataloader_synthetic_seq_len_check(dataframe, target_datetimes,
                                             config_synthetic,
                                             # target_stations
                                             ):
-    dl = prepare_dataloader(dataframe, target_datetimes,
-                            station, target_time_offsets,
-                            config_synthetic,
-                            # target_stations
-                            )
+    dl = s_prepare_dataloader(
+        dataframe, target_datetimes, station, target_time_offsets,
+        config_synthetic
+    )
+
     for img, tgt in dl:
         break
     assert img.shape[1] == config_synthetic["seq_len"]
@@ -262,11 +261,11 @@ def test_dataloader_synthetic_channel_len_check(
     dataframe, station, target_datetimes,
     target_time_offsets, config_synthetic
 ):
-    dl = prepare_dataloader(dataframe, target_datetimes,
-                            station, target_time_offsets,
-                            config_synthetic,
-                            # target_stations
-                            )
+    dl = s_prepare_dataloader(
+        dataframe, target_datetimes, station, target_time_offsets,
+        config_synthetic
+    )
+
     for img, tgt in dl:
         break
     assert img.shape[-1] == len(config_synthetic["channels"])
