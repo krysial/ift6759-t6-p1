@@ -38,7 +38,7 @@ def get_raw_images(
     channels = config['channels']
     seqs = config['no_of_temporal_seq']
     goes13_i_paths = get_frames_location(dataframe, datetimes, seqs, config['goes13_dataset'])
-    frames = fetch_frames(goes13_i_paths, channels, seqs)
+    frames = fetch_frames(datetimes, goes13_i_paths, channels, seqs)
 
     assert frames.shape == (len(datetimes), seqs, len(channels), IMAGE_HEIGHT, IMAGE_WIDTH)
     return frames
@@ -54,7 +54,7 @@ def read_conf_file(path):
 
 def get_frames_location(dataframe, datetimes, seqs, dataset):
 
-    columns = GOES13_DS[dataset] if dataset else 'hdf516'
+    columns = GOES13_DS[dataset] if dataset else GOES13_DS['hdf516']
     offset = 15
     dt_seqs = []
 
@@ -66,14 +66,17 @@ def get_frames_location(dataframe, datetimes, seqs, dataset):
             })
 
     df = pd.DataFrame(dt_seqs)
-    df['path'] = dataframe.loc[df['datetime']][columns[0]].to_list()
-    df['offset'] = dataframe.loc[df['datetime']][columns[1]].to_list()
+    seq_datetimes = df['datetime']
+    df['path'] = dataframe.reindex(seq_datetimes)[columns[0]].to_list()
+    df['offset'] = dataframe.reindex(seq_datetimes)[columns[1]].to_list()
+
+    df = df.dropna()
 
     return df
 
 
-def fetch_frames(frames_df, channels, seqs):
-    output = np.empty((frames_df.shape[0] // seqs, seqs, len(channels), IMAGE_HEIGHT, IMAGE_WIDTH))
+def fetch_frames(datetimes, frames_df, channels, seqs):
+    output = np.empty((len(datetimes), seqs, len(channels), IMAGE_HEIGHT, IMAGE_WIDTH))
 
     paths_groups = frames_df.groupby('path', sort=False)
 

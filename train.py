@@ -40,24 +40,55 @@ def main(
     with open(admin_config_path, "r") as fd:
         admin_config = json.load(fd)
 
-    dataframe_path = admin_config["dataframe_path"]
-    assert os.path.isfile(dataframe_path), f"invalid dataframe path: {dataframe_path}"
-    dataframe = pd.read_pickle(dataframe_path)
+# TODO: explain on commit this dataframe does not have labels
+# for final tests  and predictions
+    # dataframe_path = admin_config["dataframe_path"]
+    # assert os.path.isfile(dataframe_path), f"invalid dataframe path: {dataframe_path}"
+    # dataframe = pd.read_pickle(dataframe_path)
+    #
+    # if "start_bound" in admin_config:
+    #     dataframe = dataframe[dataframe.index >= datetime.datetime.fromisoformat(admin_config["start_bound"])]
+    # if "end_bound" in admin_config:
+    #     dataframe = dataframe[dataframe.index < datetime.datetime.fromisoformat(admin_config["end_bound"])]
+    #
+    # target_datetimes = [datetime.datetime.fromisoformat(d) for d in admin_config["target_datetimes"]]
+    # assert target_datetimes and all([d in dataframe.index for d in target_datetimes])
 
+# training dataframe
+    catalog_dataframe_path = user_config["train_dataset_path"]
+    assert os.path.isfile(catalog_dataframe_path), f"invalid dataframe path: {catalog_dataframe_path}"
+    catalog_dataframe = pd.read_pickle(catalog_dataframe_path)
+
+    training_dataframe = catalog_dataframe.copy()
+    if user_config['train_start_bound']:
+        training_dataframe = \
+            training_dataframe[training_dataframe.index >= datetime.datetime.fromisoformat(user_config['train_start_bound'])]
+    if user_config["train_end_bound"]:
+        training_dataframe = \
+            training_dataframe[training_dataframe.index < datetime.datetime.fromisoformat(user_config["train_end_bound"])]
+    # filtering training entries that have nan as path
+    training_dataframe = training_dataframe[training_dataframe.hdf5_16bit_path != 'nan']
+    training_dataframe = training_dataframe.iloc[len(training_dataframe)-25:len(training_dataframe)]
+    training_datetimes = training_dataframe.index.to_list()
+
+    # val_dataframe
+    val_dataframe = catalog_dataframe.copy()
     if "start_bound" in admin_config:
-        dataframe = dataframe[dataframe.index >= datetime.datetime.fromisoformat(admin_config["start_bound"])]
+        val_dataframe = val_dataframe[val_dataframe.index >= datetime.datetime.fromisoformat(admin_config["start_bound"])]
     if "end_bound" in admin_config:
-        dataframe = dataframe[dataframe.index < datetime.datetime.fromisoformat(admin_config["end_bound"])]
+        val_dataframe = val_dataframe[val_dataframe.index < datetime.datetime.fromisoformat(admin_config["end_bound"])]
 
     target_datetimes = [datetime.datetime.fromisoformat(d) for d in admin_config["target_datetimes"]]
-    assert target_datetimes and all([d in dataframe.index for d in target_datetimes])
+    target_datetimes = target_datetimes[:10]
+    assert target_datetimes and all([d in val_dataframe.index for d in target_datetimes])
+
     target_stations = admin_config["stations"]
     target_time_offsets = [pd.Timedelta(d).to_pytimedelta() for d in admin_config["target_time_offsets"]]
     stations = {user_config['station']: target_stations[user_config['station']]}
 
-    DATASET_LENGTH = len(dataframe)
-    STEPS_PER_EPOCH = int(0.9 * DATASET_LENGTH)
-    VALIDATION_STEPS = int(0.1 * DATASET_LENGTH)
+# TODO: revert on commit
+    STEPS_PER_EPOCH = int(len(training_datetimes) // user_config['batch_size'])
+    VALIDATION_STEPS = int(len(target_datetimes) // user_config['batch_size'])
 
     user_config['seq_len'] = 1  # TODO: this needs to be fixed
 
@@ -68,9 +99,17 @@ def main(
         # load synthetic data
         prepare_dataloader = synthetic_dataloader.prepare_dataloader
 
-    data_loader = prepare_dataloader(
-        dataframe,
+    val_data_loader = prepare_dataloader(
+        val_dataframe,
         target_datetimes,
+        stations,
+        target_time_offsets,
+        user_config
+    ).prefetch(tf.data.experimental.AUTOTUNE)
+
+    train_data_loader = prepare_dataloader(
+        training_dataframe,
+        training_datetimes,
         stations,
         target_time_offsets,
         user_config
@@ -82,7 +121,7 @@ def main(
         user_config
     )
 
-    optimizer = Adam(lr=1e-10, decay=1e-12)
+    optimizer = Adam(lr=1e-3, decay=1e-12)
 
     model.compile(
         loss='mean_squared_error',
@@ -134,15 +173,17 @@ def main(
             user_config['model'] + '-' + 'training-' + str(timestamp) + '.log'
         )
     )
-
-    model.fit_generator(
-        data_loader,
+    print('epoch', user_config['epoch'])
+    model.fit(
+        train_data_loader,
         epochs=user_config['epoch'],
         use_multiprocessing=True,
         workers=32,
         callbacks=[tb, csv_logger, early_stopper],
         steps_per_epoch=STEPS_PER_EPOCH,
-        validation_steps=VALIDATION_STEPS
+        validation_steps=VALIDATION_STEPS,
+        validation_freq=1,
+        validation_data=val_data_loader
     )
 
     print(model.summary())

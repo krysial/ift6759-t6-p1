@@ -1,4 +1,7 @@
 {
+    "train_dataset_path": "/project/cq-training-1/project1/data/catalog.helios.public.20100101-20160101.pkl",
+    "train_start_bound": "2010-01-01",
+    "train_end_bound": "2015-01-01",
     "batch_size": 32,
     "channels": ["ch1", "ch2", "ch3", "ch4", "ch6"],
     "goes13_dataset": "hdf516",

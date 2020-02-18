@@ -65,7 +65,7 @@ def prepare_dataloader(
     if config['stack_seqs']:
         data_loader = data_loader.map(dataset_concat_seq_images, num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
-    data_loader = data_loader.batch(config['batch_size'])
+    data_loader = data_loader.batch(config['batch_size']).repeat()
 
     # Final step of data loading pipeline: Return the dataset loading object
     return data_loader
