@@ -113,7 +113,7 @@ def main(
 
     # Helper: TensorBoard
     tb = TensorBoard(
-        log_dir=os.path.join('results', 'logs', str(config.model)+"_"+str(timestamp)),
+        log_dir=os.path.join('results', 'logs', str(config.model) + "_" + str(timestamp)),
         histogram_freq=1,
         write_graph=True,
         write_images=False
