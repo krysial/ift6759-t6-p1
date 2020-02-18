@@ -128,6 +128,7 @@ def main(
         use_multiprocessing=True,
         workers=32,
         callbacks=[tb],
+        validation_data=data_loader,
         steps_per_epoch=STEPS_PER_EPOCH,
         validation_steps=VALIDATION_STEPS,
     )
