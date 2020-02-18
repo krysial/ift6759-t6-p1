@@ -46,7 +46,7 @@ def prepare_dataloader(
     data_loader = tf.data.Dataset.from_generator(
         generator,
         output_types=(tf.float32, tf.float32),
-        output_shapes=((config["no_of_temporal_seq"], len(config['channels']), 650, 1500), 4))
+        output_shapes=((config["no_of_temporal_seq"], len(config['channels']), 650, 1500), len(target_time_offsets)))
 
     # Second step: Estimate/Calculate station
     # coordinates on image and crop area dimensions
@@ -62,6 +62,9 @@ def prepare_dataloader(
     )
 
     data_loader = data_loader.map(crop_image_fn, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+    if config['stack_seqs']:
+        data_loader = data_loader.map(dataset_concat_seq_images, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+
     data_loader = data_loader.batch(config['batch_size'])
 
     # Final step of data loading pipeline: Return the dataset loading object

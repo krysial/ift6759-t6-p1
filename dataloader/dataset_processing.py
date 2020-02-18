@@ -44,5 +44,7 @@ def dataset_processing(
 
 
 def dataset_concat_seq_images(image_tensor, target_tensor):
-    concatenated = tf.concat([image_tensor[t] for t in range(len(image_tensor))], axis=-1)
+    image_tensor_t = tf.transpose(image_tensor, [1, 2, 0, 3])
+    sh = image_tensor_t.shape
+    concatenated = tf.reshape(image_tensor_t, shape=[sh[0], sh[1], sh[2] * sh[3]])
     return concatenated, target_tensor

@@ -76,9 +76,6 @@ def main(
         user_config
     ).prefetch(tf.data.experimental.AUTOTUNE)
 
-    if user_config['stack_seqs']:
-        data_loader = data_loader.map(dataset_concat_seq_images, num_parallel_calls=tf.data.experimental.AUTOTUNE)
-
     model = prepare_model(
         stations,
         target_time_offsets,
@@ -145,7 +142,6 @@ def main(
         workers=32,
         callbacks=[tb, csv_logger, early_stopper],
         steps_per_epoch=STEPS_PER_EPOCH,
-        validation_data=data_loader,
         validation_steps=VALIDATION_STEPS
     )
 
