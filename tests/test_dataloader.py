@@ -272,10 +272,10 @@ def test_dataloader_synthetic_channel_len_check(
 
 
 def test_dataloader_real_clearsky_ghi_size_check(dataframe, target_datetimes,
-                                          station, target_time_offsets,
-                                          config_real,
-                                          # target_stations
-                                          ):
+                                                 station, target_time_offsets,
+                                                 config_real,
+                                                 # target_stations
+                                                 ):
     with mock.patch("numpy.random.randint", randint_mock):
         dl = prepare_dataloader(dataframe, target_datetimes,
                                 station, target_time_offsets,
@@ -286,4 +286,3 @@ def test_dataloader_real_clearsky_ghi_size_check(dataframe, target_datetimes,
         break
     assert data['clearsky'].shape[0] == config_real["batch_size"]
     assert data['clearsky'].shape[1] == config_real["seq_len"]
-
