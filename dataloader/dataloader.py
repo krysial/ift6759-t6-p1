@@ -48,7 +48,11 @@ def prepare_dataloader(
         generator, ({
             'images': tf.float32,
             'clearsky': tf.float32,
-        }, tf.float32)
+        }, tf.float32), output_shapes=(
+            {
+                'images': (config["seq_len"], len(config['channels']), 650, 1500),
+                'clearsky': config['seq_len']
+            }, len(target_time_offsets))
     )
 
     # Second step: Estimate/Calculate station
