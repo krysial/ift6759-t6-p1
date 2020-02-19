@@ -4,6 +4,7 @@ import tensorflow as tf
 from models.dummy import DummyModel
 from models.lrcn import LRCNModel
 from models.basecnn import BaseCNNModel
+from tensorflow.keras.optimizers import *
 
 models = {
     "dummy": DummyModel,
@@ -30,7 +31,7 @@ def prepare_model(
         target_time_offsets: typing.List[datetime.timedelta],
         config: typing.Dict[typing.AnyStr, typing.Any],
 ) -> tf.keras.Model:
-    if user_config['checkpoint_start']:
+    if 'checkpoint_start' in config:
         model = tf.keras.models.load_model(
             os.path.join(
                 config['checkpoint_path'],

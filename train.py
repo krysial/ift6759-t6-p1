@@ -7,7 +7,6 @@ import pandas as pd
 import time
 import tensorflow as tf
 
-from tensorflow.keras.optimizers import Adam, RMSprop
 from tensorflow.keras.callbacks import TensorBoard,\
     ModelCheckpoint, \
     EarlyStopping, \
@@ -25,7 +24,6 @@ def main(
     admin_config_path: typing.AnyStr,
     user_config_path: typing.Optional[typing.AnyStr] = None
 ) -> None:
-    print(config)
     print(tf.config.experimental.list_physical_devices('GPU'))
 
     if user_config_path:
@@ -35,6 +33,8 @@ def main(
     else:
         user_config = {}
     user_config.update(vars(config))
+
+    print(user_config)
 
     assert os.path.isfile(admin_config_path), f"invalid admin config file: {admin_config_path}"
     with open(admin_config_path, "r") as fd:
@@ -53,11 +53,13 @@ def main(
     assert target_datetimes and all([d in dataframe.index for d in target_datetimes])
     target_stations = admin_config["stations"]
     target_time_offsets = [pd.Timedelta(d).to_pytimedelta() for d in admin_config["target_time_offsets"]]
-    stations = {user_config['station']: target_stations[user_config['station']]}
+
+    # TODO URGENTLY!!! make sure we train on all stations
+    stations = {"BND": target_stations["BND"]}
 
     DATASET_LENGTH = len(dataframe)
-    STEPS_PER_EPOCH = int(0.9 * DATASET_LENGTH) // config.batch_size
-    VALIDATION_STEPS = int(0.1 * DATASET_LENGTH) // config.batch_size
+    STEPS_PER_EPOCH = int(0.9 * DATASET_LENGTH) // user_config["batch_size"]
+    VALIDATION_STEPS = int(0.1 * DATASET_LENGTH) // user_config["batch_size"]
 
     if user_config['real']:
         # real dataloader is expecting a Dict {} object in evaluation
@@ -102,7 +104,7 @@ def main(
         os.path.join(
             'results',
             'logs',
-            'backup',
+            'backups',
             model_id + '.log'
         )
     )
