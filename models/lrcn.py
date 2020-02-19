@@ -3,11 +3,13 @@ import datetime
 from models.base import BaseModel
 import tensorflow as tf
 
+from utils.time_distributed import TimeDistributed
+
 from tensorflow.keras.layers import Dense, Flatten, Dropout, ZeroPadding3D
 from tensorflow.keras.layers import LSTM
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.optimizers import Adam, RMSprop
-from tensorflow.keras.layers import TimeDistributed, Concatenate, RepeatVector
+from tensorflow.keras.layers import Concatenate, RepeatVector
 from tensorflow.keras.layers import (
     Conv2D, MaxPooling3D, Conv3D, MaxPooling2D, BatchNormalization, Activation
 )
@@ -37,7 +39,7 @@ class LRCNModel(BaseModel):
                     kernel_initializer=initialiser,
                     kernel_regularizer=l2(reg_lambda)
                 ),
-                input_shape=(config.seq_len, config.crop_size, config.crop_size, len(config.channels))
+                input_shape=(config['seq_len'], config['crop_size'], config['crop_size'], len(config['channels']))
             )
         )
         self.conv2DPipe.add(TimeDistributed(BatchNormalization()))
@@ -67,7 +69,7 @@ class LRCNModel(BaseModel):
         # LSTM output head
         self.conv2DPipe.add(TimeDistributed(Flatten()))
         self.extraFeatures = Sequential()
-        self.extraFeatures.add(RepeatVector(config.seq_len))
+        self.extraFeatures.add(RepeatVector(config['seq_len']))
         self.extraFeatures.add(Dense(1012))
 
         self.sequence = Sequential()
