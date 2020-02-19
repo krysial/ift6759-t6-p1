@@ -1,6 +1,7 @@
 from collections import namedtuple
 from itertools import zip_longest
 import pandas as pd
+import numpy as np
 
 from utils.synthetic_mnist_generator import SyntheticMNISTGenerator, \
     Options as SyntheticMNISTGeneratorOptions
@@ -72,16 +73,25 @@ def create_synthetic_generator(opts):
         ghi_processor = SyntheticGHIProcessor(ghi_opts)
         mnist_generator = SyntheticMNISTGenerator(mnist_opts)
 
-        for i, (seq, ghi) in enumerate(map(
-            lambda data: (
+        def dataset_data_broker(data):
+            ghi, clearsky_ghi = ghi_processor.processData(data)
+
+            return (
                 data[offsets[-1]:, :, :, :],
-                ghi_processor.processData(data)
-            ),
+                clearsky_ghi,
+                ghi
+            )
+
+        for i, (seq, clearsky, ghi) in enumerate(map(
+            dataset_data_broker,
             mnist_generator
         )):
             if DEBUGGING:
                 pydevd.settrace(suspend=False)
 
-            yield seq, ghi
+            yield {
+                'images': seq,
+                'clearsky': clearsky
+            }, ghi
 
     return create_generator

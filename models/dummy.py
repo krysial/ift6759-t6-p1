@@ -20,5 +20,5 @@ class DummyModel(BaseModel):
         return self
 
     def call(self, inputs):
-        x = self.dense1(self.flatten(inputs))
+        x = self.dense1(self.flatten(inputs['images']))
         return self.dense2(x)
