@@ -7,7 +7,6 @@ import pandas as pd
 import time
 import tensorflow as tf
 
-from tensorflow.keras.optimizers import Adam, RMSprop
 from tensorflow.keras.callbacks import TensorBoard,\
     ModelCheckpoint, \
     EarlyStopping, \
@@ -25,7 +24,6 @@ def main(
     admin_config_path: typing.AnyStr,
     user_config_path: typing.Optional[typing.AnyStr] = None
 ) -> None:
-    print(config)
     print(tf.config.experimental.list_physical_devices('GPU'))
 
     if user_config_path:
@@ -35,6 +33,8 @@ def main(
     else:
         user_config = {}
     user_config.update(vars(config))
+
+    print(user_config)
 
     assert os.path.isfile(admin_config_path), f"invalid admin config file: {admin_config_path}"
     with open(admin_config_path, "r") as fd:
@@ -53,13 +53,13 @@ def main(
     assert target_datetimes and all([d in dataframe.index for d in target_datetimes])
     target_stations = admin_config["stations"]
     target_time_offsets = [pd.Timedelta(d).to_pytimedelta() for d in admin_config["target_time_offsets"]]
-    stations = {user_config['station']: target_stations[user_config['station']]}
+
+    # TODO URGENTLY!!! make sure we train on all stations
+    stations = {"BND": target_stations["BND"]}
 
     DATASET_LENGTH = len(dataframe)
-    STEPS_PER_EPOCH = int(0.9 * DATASET_LENGTH)
-    VALIDATION_STEPS = int(0.1 * DATASET_LENGTH)
-
-    user_config['seq_len'] = 1  # TODO: this needs to be fixed
+    STEPS_PER_EPOCH = int(0.9 * DATASET_LENGTH) // user_config["batch_size"]
+    VALIDATION_STEPS = int(0.1 * DATASET_LENGTH) // user_config["batch_size"]
 
     if user_config['real']:
         # real dataloader is expecting a Dict {} object in evaluation
@@ -76,63 +76,43 @@ def main(
         user_config
     ).prefetch(tf.data.experimental.AUTOTUNE)
 
-    model = prepare_model(
-        stations,
-        target_time_offsets,
-        user_config
-    )
-
-    optimizer = Adam(lr=1e-5, decay=1e-6)
-
-    model.compile(
-        loss='mean_squared_error',
-        optimizer=optimizer
-    )
-
+    timestamp = time.time()
+    model_id = str(timestamp) + "_" + user_config['model']
     checkpointer = ModelCheckpoint(
         filepath=os.path.join(
-            'results',
-            'checkpoints',
-            user_config['model'] + '-' +
-            'synthetic' if not user_config['real'] else 'real' +
-            '.{epoch:03d}-{val_loss:.3f}.hdf5'
+            user_config['checkpoint_path'],
+            model_id + ".h5"
         ),
         verbose=1,
         save_best_only=True
     )
 
-    # class MyCustomCallback(tf.keras.callbacks.Callback):
-    #     def on_train_batch_begin(self, batch, logs=None):
-    #         print('Training: batch {} begins at {}'.format(batch, datetime.datetime.now().time()))
-
-    #     def on_train_batch_end(self, batch, logs=None):
-    #         print('Training: batch {} ends at {}'.format(batch, datetime.datetime.now().time()))
-
-    #     def on_test_batch_begin(self, batch, logs=None):
-    #         print('Evaluating: batch {} begins at {}'.format(batch, datetime.datetime.now().time()))
-
-    #     def on_test_batch_end(self, batch, logs=None):
-    #         print('Evaluating: batch {} ends at {}'.format(batch, datetime.datetime.now().time()))
-
-    # Helper: TensorBoard
     tb = TensorBoard(
-        log_dir=os.path.join('results', 'logs', user_config['model']),
+        log_dir=os.path.join(
+            'results',
+            'logs',
+            model_id
+        ),
         histogram_freq=1,
         write_graph=True,
         write_images=False
     )
 
-    # Helper: Stop when we stop learning.
     early_stopper = EarlyStopping(patience=5)
 
-    # Helper: Save results.
-    timestamp = time.time()
     csv_logger = CSVLogger(
         os.path.join(
             'results',
             'logs',
-            user_config['model'] + '-' + 'training-' + str(timestamp) + '.log'
+            'backups',
+            model_id + '.log'
         )
+    )
+
+    model = prepare_model(
+        stations,
+        target_time_offsets,
+        user_config
     )
 
     model.fit_generator(
@@ -140,7 +120,7 @@ def main(
         epochs=user_config['epoch'],
         use_multiprocessing=True,
         workers=32,
-        callbacks=[tb, csv_logger, early_stopper],
+        callbacks=[tb, csv_logger],
         steps_per_epoch=STEPS_PER_EPOCH,
         validation_steps=VALIDATION_STEPS
     )

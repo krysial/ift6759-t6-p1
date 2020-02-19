@@ -10,7 +10,7 @@ import tensorflow as tf
 import tqdm
 
 from dataloader.dataloader import prepare_dataloader as prepare_dataloader_t06
-from models import prepare_model as prepare_model_t06
+from models import prepare_model as prepare_model_eval
 
 
 def prepare_dataloader(
@@ -36,7 +36,7 @@ def prepare_model(
         target_time_offsets: typing.List[datetime.timedelta],
         config: typing.Dict[typing.AnyStr, typing.Any],
 ) -> tf.keras.Model:
-    model = prepare_model_t06(
+    model = prepare_model_eval(
         stations,
         target_time_offsets,
         config
