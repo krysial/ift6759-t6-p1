@@ -68,6 +68,6 @@ def test_datasetloader_ghi(create_generator):
 
     assert ghi is not None
     assert np.array_equal(
-        ghi.numpy(), 
+        ghi.numpy(),
         np.array([0, 0, 0, 64.80217], dtype='float32')
     )
