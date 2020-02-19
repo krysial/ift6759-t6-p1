@@ -4,13 +4,15 @@ import tensorflow as tf
 from models.dummy import DummyModel
 from models.lrcn import LRCNModel
 from models.basecnn import BaseCNNModel
+from models.convlstm import ConvLSTMModel
 from tensorflow.keras.optimizers import *
 import os
 
 models = {
     "dummy": DummyModel,
     "lrcn": LRCNModel,
-    "basecnn": BaseCNNModel
+    "basecnn": BaseCNNModel,
+    "convlstm": ConvLSTMModel,
 }
 
 
