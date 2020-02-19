@@ -219,6 +219,13 @@ if __name__ == "__main__":
         help="past target name to append",
         default="GHI"
     )
+    parser.add_argument(
+        "-lr",
+        "--learning_rate",
+        type=float,
+        help="past target name to append",
+        default="GHI",
+    )
     args = parser.parse_args()
 
     main(
