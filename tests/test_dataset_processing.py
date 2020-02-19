@@ -84,13 +84,14 @@ def test_equal_seqlen_input_to_output(data, target, stations_px, station, config
 
 
 def test_equal_channel_input_to_output(data, target, stations_px, station, config):
-    data, tgt = dataset_processing(stations_px, station, config)(data.copy(), target)
-    img = data['images']
+    n_data, tgt = dataset_processing(stations_px, station, config)(data.copy(), target)
+    img = n_data['images']
     assert (data['images'].shape[1] == img.shape[-1])
 
 
 def test_img_nan_generation_in_process(data, target, stations_px, station, config):
     data, tgt = dataset_processing(stations_px, station, config)(data, target)
+    img = data['images']
     assert (tf.math.is_nan(img).numpy().any()) == (tf.math.is_nan(data['images']).numpy().any())
 
 
