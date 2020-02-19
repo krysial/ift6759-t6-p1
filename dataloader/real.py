@@ -5,6 +5,7 @@ import numpy as np
 
 from dataloader.get_GHI_targets import get_GHI_targets
 from dataloader.get_raw_images import get_raw_images
+from dataloader.get_column_from_dataframe import get_column_from_dataframe
 
 
 try:
@@ -39,9 +40,17 @@ def create_data_generator(
                 config
             )
             images = get_raw_images(dataframe, [datetime], config)
+            clearsky = get_column_from_dataframe(
+                dataframe,
+                [datetime],
+                station,
+                target_time_offsets,
+                'CLEARSKY_GHI',
+                config
+            )
             yield {
                 'images': images[0],
-                'clearsky': [],
+                'clearsky': clearsky[0],
             }, targets[0]
 
     return create_generator
