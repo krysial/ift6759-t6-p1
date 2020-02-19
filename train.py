@@ -82,7 +82,7 @@ def main(
         user_config
     )
 
-    optimizer = Adam(lr=1e-10, decay=1e-12)
+    optimizer = Adam(lr=1e-5, decay=1e-6)
 
     model.compile(
         loss='mean_squared_error',

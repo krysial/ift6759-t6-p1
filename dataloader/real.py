@@ -39,6 +39,9 @@ def create_data_generator(
                 config
             )
             images = get_raw_images(dataframe, [datetime], config)
-            yield images[0], targets[0]
+            yield {
+                'images': images[0],
+                'clearsky': [],
+            }, targets[0]
 
     return create_generator

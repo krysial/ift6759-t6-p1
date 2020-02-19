@@ -7,7 +7,7 @@ from tensorflow.keras.layers import Dense, Flatten, Dropout, ZeroPadding3D
 from tensorflow.keras.layers import LSTM
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.optimizers import Adam, RMSprop
-from tensorflow.keras.layers import TimeDistributed
+from tensorflow.keras.layers import TimeDistributed, Concatenate, RepeatVector
 from tensorflow.keras.layers import (
     Conv2D, MaxPooling3D, Conv3D, MaxPooling2D, BatchNormalization, Activation
 )
@@ -29,19 +29,20 @@ class LRCNModel(BaseModel):
         initialiser = 'glorot_uniform'
         reg_lambda = 0.001
 
-        self.sequence = Sequential()
-        self.sequence.add(
+        self.conv2DPipe = Sequential()
+        self.conv2DPipe.add(
             TimeDistributed(
                 Conv2D(
                     32, (8, 8), padding='same',
                     kernel_initializer=initialiser,
                     kernel_regularizer=l2(reg_lambda)
-                )
+                ),
+                input_shape=(config.seq_len, config.crop_size, config.crop_size, len(config.channels))
             )
         )
-        self.sequence.add(TimeDistributed(BatchNormalization()))
-        self.sequence.add(TimeDistributed(Activation('relu')))
-        self.sequence.add(
+        self.conv2DPipe.add(TimeDistributed(BatchNormalization()))
+        self.conv2DPipe.add(TimeDistributed(Activation('relu')))
+        self.conv2DPipe.add(
             TimeDistributed(
                 Conv2D(
                     32, (3, 3), kernel_initializer=initialiser,
@@ -49,25 +50,28 @@ class LRCNModel(BaseModel):
                 )
             )
         )
-        self.sequence.add(TimeDistributed(BatchNormalization()))
-        self.sequence.add(TimeDistributed(Activation('relu')))
-        self.sequence.add(
+        self.conv2DPipe.add(TimeDistributed(BatchNormalization()))
+        self.conv2DPipe.add(TimeDistributed(Activation('relu')))
+        self.conv2DPipe.add(
             TimeDistributed(
                 MaxPooling2D((2, 2), strides=(2, 2))
             )
         )
 
         # 2nd-5th (default) blocks
-        self.sequence = self.add_default_block(self.sequence, 32, init=initialiser, reg_lambda=reg_lambda)
-        self.sequence = self.add_default_block(self.sequence, 128, init=initialiser, reg_lambda=reg_lambda)
-        self.sequence = self.add_default_block(self.sequence, 256, init=initialiser, reg_lambda=reg_lambda)
-        self.sequence = self.add_default_block(self.sequence, 512, init=initialiser, reg_lambda=reg_lambda)
+        self.conv2DPipe = self.add_default_block(self.conv2DPipe, 32, init=initialiser, reg_lambda=reg_lambda)
+        self.conv2DPipe = self.add_default_block(self.conv2DPipe, 128, init=initialiser, reg_lambda=reg_lambda)
+        self.conv2DPipe = self.add_default_block(self.conv2DPipe, 256, init=initialiser, reg_lambda=reg_lambda)
+        self.conv2DPipe = self.add_default_block(self.conv2DPipe, 512, init=initialiser, reg_lambda=reg_lambda)
 
         # LSTM output head
-        self.sequence.add(TimeDistributed(Flatten()))
-        self.sequence.add(Dense(512))
-        self.sequence.add(Dense(512))
-        self.sequence.add(LSTM(512, return_sequences=True, dropout=0.3))
+        self.conv2DPipe.add(TimeDistributed(Flatten()))
+        self.extraFeatures = Sequential()
+        self.extraFeatures.add(RepeatVector(config.seq_len))
+        self.extraFeatures.add(Dense(1012))
+
+        self.sequence = Sequential()
+        self.sequence.add(Concatenate(axis=-1))
         self.sequence.add(LSTM(512, dropout=0.3))
         self.sequence.add(Dense(512))
         self.sequence.add(Dense(len(target_time_offsets)))
@@ -103,4 +107,7 @@ class LRCNModel(BaseModel):
         return model
 
     def call(self, inputs):
-        return self.sequence(inputs)
+        images = self.conv2DPipe(inputs['images'])
+        clearsky = self.extraFeatures(inputs['clearsky'])
+
+        return self.sequence([images, clearsky])

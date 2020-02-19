@@ -37,13 +37,16 @@ def test_datasetloader_images(create_generator):
     generator = create_generator()
 
     data_loader = tf.data.Dataset.from_generator(
-        generator,
-        (tf.int64, tf.int64)
+        generator, ({
+            'images': tf.float32,
+            'clearsky': tf.float32,
+        }, tf.float32)
     )
 
     assert data_loader is not None
 
-    image, _ = next(iter(data_loader))
+    data, _ = next(iter(data_loader))
+    image = data['images']
 
     assert tf.debugging.is_numeric_tensor(image)
     assert image.numpy().shape == (12, 300, 300, 5)
@@ -53,8 +56,10 @@ def test_datasetloader_ghi(create_generator):
     generator = create_generator()
 
     data_loader = tf.data.Dataset.from_generator(
-        generator,
-        (tf.int64, tf.int64)
+        generator, ({
+            'images': tf.float32,
+            'clearsky': tf.float32,
+        }, tf.float32)
     )
 
     assert data_loader is not None
@@ -62,4 +67,7 @@ def test_datasetloader_ghi(create_generator):
     _, ghi = next(iter(data_loader))
 
     assert ghi is not None
-    assert np.array_equal(ghi.numpy(), [0, 0, 0, 64])
+    assert np.array_equal(
+        ghi.numpy(), 
+        np.array([0, 0, 0, 64.80217], dtype='float32')
+    )
