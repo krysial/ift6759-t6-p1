@@ -224,7 +224,7 @@ if __name__ == "__main__":
         "--learning_rate",
         type=float,
         help="past target name to append",
-        default="GHI",
+        default=1e-5,
     )
     args = parser.parse_args()
 
