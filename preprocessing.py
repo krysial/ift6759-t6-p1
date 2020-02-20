@@ -14,6 +14,8 @@ from threading import Thread
 
 import functools
 import argparse
+import time
+import gc
 
 IMAGE_HEIGHT = 650
 IMAGE_WIDTH = 1500
@@ -44,16 +46,21 @@ class Worker(Thread):
             finally:
                 self.queue.task_done()
 
-    def worker_task(self, path):
+    def worker_task(self, data):
+        lats = None
+        lons = None
+        c, path = data
+
         if os.path.isfile(path):
             with h5py.File(path, "r") as h5_data:
                 file_data = []
+                start = time.time()
                 for offset in range(96):
                     images = []
                     for channel in ['ch1', 'ch2', 'ch3', 'ch4', 'ch6']:
                         channel_idx_data = utils.fetch_hdf5_sample(channel, h5_data, offset)
                         if channel_idx_data is None or channel_idx_data.shape != (IMAGE_HEIGHT, IMAGE_WIDTH):
-                            channel_idx_data = 0
+                            break
                         else:
                             if not self.stations_px_center:
                                 i = 0
@@ -90,27 +97,39 @@ class Worker(Thread):
                             del channel_idx_data
 
                     if images:
-                        stations_images = np.transpose(np.array(images), [1, 2, 3, 0])
+                        # stations_images = np.transpose(np.array(images), [1, 2, 3, 0])
+                        # stations_images = np.array(images)
+                        arr = np.array(images)
+                        stations_images = np.transpose(np.array(images), [1, 2, 3, 0]).copy()
+
+                        del arr
                     else:
                         stations_images = []
 
                     file_data.append(stations_images)
 
-                result = np.array(file_data)
+                result = np.array(file_data.copy())
+                del file_data
                 save_path_base = OUTPUT_PATH + str(self.config.crop_size) + '/'
 
                 if not(os.path.exists(save_path_base)):
                     os.makedirs(save_path_base)
 
-                np.save(
-                    save_path_base +
-                    os.path.basename(os.path.normpath(path)),
-                    result
-                )
+                if result.size > 0:
+                    end = time.time()
+                    print('One file processed', end - start)
+                    np.save(
+                        save_path_base +
+                        os.path.basename(os.path.normpath(path)),
+                        result
+                    )
+                    end = time.time()
+                    print('One file saved', end - start)
 
                 del result
-                del file_data
                 h5_data.close()
+                del h5_data
+                gc.collect()
 
 
 def main(config, dataframe):
@@ -125,12 +144,12 @@ def main(config, dataframe):
         worker.daemon = True
         worker.start()
 
-    for path in unique_paths:
+    for i, path in enumerate(unique_paths):
         if path == "nan":
             print('Nan encountered')
         else:
             print('Queueing {}'.format(path))
-            queue.put(path)
+            queue.put((i, path))
 
     queue.join()
     print('done')
