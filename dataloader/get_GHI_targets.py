@@ -47,7 +47,7 @@ def get_GHI_targets(
             except (AssertionError, KeyError):
                 pass
             else:
-                targets[i, j] = ghi
+                targets[i, j] = np.nan_to_num(ghi)
 
     return targets
 
