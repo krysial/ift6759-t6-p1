@@ -97,19 +97,19 @@ class Worker(Thread):
                             del channel_idx_data
 
                     if images:
-                        # stations_images = np.transpose(np.array(images), [1, 2, 3, 0])
-                        # stations_images = np.array(images)
-                        arr = np.array(images)
-                        stations_images = np.transpose(np.array(images), [1, 2, 3, 0]).copy()
+                        arr = np.array(images).copy()
+                        trns = np.transpose(arr, [1, 2, 3, 0]).copy()
+                        stations_images = np.random.rand(7, 77, 77, 5)
 
                         del arr
+                        del images
                     else:
                         stations_images = []
 
-                    file_data.append(stations_images)
+                    file_data.append(stations_images.copy())
+                    del stations_images
 
-                result = np.array(file_data.copy())
-                del file_data
+                result = np.array(file_data.copy()).copy()
                 save_path_base = OUTPUT_PATH + str(self.config.crop_size) + '/'
 
                 if not(os.path.exists(save_path_base)):
@@ -118,15 +118,16 @@ class Worker(Thread):
                 if result.size > 0:
                     end = time.time()
                     print('One file processed', end - start)
-                    np.save(
-                        save_path_base +
-                        os.path.basename(os.path.normpath(path)),
-                        result
-                    )
+                    # np.save(
+                    #     save_path_base +
+                    #     os.path.basename(os.path.normpath(path)),
+                    #     result.copy()
+                    # )
                     end = time.time()
                     print('One file saved', end - start)
 
                 del result
+                del file_data
                 h5_data.close()
                 del h5_data
                 gc.collect()
@@ -138,7 +139,7 @@ def main(config, dataframe):
         dataframe.groupby('hdf5_16bit_path').groups.keys()
     )[config.start_index:config.end_index]
 
-    for x in range(20):
+    for x in range(6):
         worker = Worker(queue, config)
         # Setting daemon to True will let the main thread exit even though the workers are blocking
         worker.daemon = True
@@ -175,7 +176,7 @@ if __name__ == '__main__':
         "--crop-size",
         type=int,
         help="size of the crop frame",
-        default=80
+        default=77
     )
     args = parser.parse_args()
 
