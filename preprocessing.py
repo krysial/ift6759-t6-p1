@@ -56,8 +56,14 @@ class Worker(Thread):
                             channel_idx_data = 0
                         else:
                             if not self.stations_px_center:
-                                lats = utils.fetch_hdf5_sample("lat", h5_data, 0)
-                                lons = utils.fetch_hdf5_sample("lon", h5_data, 0)
+                                i = 0
+                                while lats is None or lons is None:
+                                    lats = utils.fetch_hdf5_sample("lat", h5_data, i)
+                                    lons = utils.fetch_hdf5_sample("lon", h5_data, i)
+                                    i += 1
+
+                                if lats is None or lons is None:
+                                    continue
 
                                 def red_coords_to_px(aggre, s):
                                     lat, lon, _ = self.stations[s]
@@ -150,7 +156,7 @@ if __name__ == '__main__':
         "--crop-size",
         type=int,
         help="size of the crop frame",
-        default=90
+        default=80
     )
     args = parser.parse_args()
 
