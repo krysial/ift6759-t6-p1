@@ -3,6 +3,7 @@ import typing
 
 MAX_GHI = 1500
 
+
 def dataset_processing(
         stations_px: typing.Dict[typing.AnyStr, typing.Tuple[float, float]],
         station: typing.Dict[typing.AnyStr, typing.Tuple[float, float, float]],

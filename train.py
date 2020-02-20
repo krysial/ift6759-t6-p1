@@ -8,9 +8,6 @@ import time
 import tensorflow as tf
 import numpy as np
 
-np.random.seed(12345)
-tf.random.set_seed(12345)
-
 from tensorflow.keras.callbacks import TensorBoard,\
     ModelCheckpoint, \
     EarlyStopping, \
@@ -21,6 +18,9 @@ import dataloader.dataloader as real_prepare_dataloader
 import dataloader.synthetic_dataloader as synthetic_dataloader
 from models import prepare_model
 from dataloader.dataset_processing import dataset_concat_seq_images
+
+np.random.seed(12345)
+tf.random.set_seed(12345)
 
 
 def main(
