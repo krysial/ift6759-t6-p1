@@ -13,6 +13,7 @@ from queue import Queue
 from threading import Thread
 
 import functools
+import argparse
 
 IMAGE_HEIGHT = 650
 IMAGE_WIDTH = 1500
@@ -91,20 +92,23 @@ class Worker(Thread):
                 result = np.array(file_data)
                 np.save(
                     OUTPUT_PATH +
+                    config.crop_size + '/' +
                     os.path.basename(os.path.normpath(path)),
                     result
                 )
 
                 del result
+                del file_data
                 h5_data.close()
 
 
-if __name__ == '__main__':
+def main(config, dataframe):
     queue = Queue()
-    dataframe = pd.read_pickle(DATAFRAME_PATH)
-    unique_paths = list(dataframe.groupby('hdf5_16bit_path').groups.keys())
+    unique_paths = list(
+        dataframe.groupby('hdf5_16bit_path').groups.keys()
+    )[config.start_index, config.end_index]
 
-    for x in range(1):
+    for x in range(20):
         worker = Worker(queue)
         # Setting daemon to True will let the main thread exit even though the workers are blocking
         worker.daemon = True
@@ -116,3 +120,33 @@ if __name__ == '__main__':
 
     queue.join()
     print('done')
+
+
+if __name__ == '__main__':
+    dataframe = pd.read_pickle(DATAFRAME_PATH)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--start-index",
+        type=int,
+        help="start dateframe index",
+        default=0
+    )
+    parser.add_argument(
+        "--end-index",
+        type=int,
+        help="end dateframe index",
+        default=len(dataframe)
+    )
+    parser.add_argument(
+        "--crop-size",
+        type=int,
+        help="size of the crop frame",
+        default=100
+    )
+    args = parser.parse_args()
+
+    main(
+        args,
+        dataframe
+    )
