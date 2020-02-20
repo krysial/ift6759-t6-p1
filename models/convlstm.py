@@ -9,6 +9,8 @@ from tensorflow.keras.optimizers import *
 from tensorflow.keras.layers import *
 from tensorflow.keras.regularizers import *
 
+from utils.time_distributed import TimeDistributed
+
 import numpy as np
 
 
