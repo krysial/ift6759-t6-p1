@@ -23,17 +23,18 @@ OUTPUT_PATH = "/project/cq-training-1/project1/teams/team06/cache/hdf5v5_16bit/"
 
 
 class Worker(Thread):
-    def __init__(self, queue):
+    def __init__(self, queue, config):
         Thread.__init__(self)
         self.queue = queue
         self.stations_px_center = []
-        self.px_offset = 40 // 2
+        self.px_offset = config.crop_size // 2
+        self.config = config
 
         with open('./data/admin_cfg.json') as f:
-            config = json.load(f)
+            admin_config = json.load(f)
             f.close()
 
-        self.stations = config['stations']
+        self.stations = admin_config['stations']
 
     def run(self):
         while True:
@@ -90,9 +91,13 @@ class Worker(Thread):
                     file_data.append(stations_images)
 
                 result = np.array(file_data)
+                save_path_base = OUTPUT_PATH + str(self.config.crop_size) + '/'
+
+                if not(os.path.exists(save_path_base)):
+                    os.mkdir(save_path_base)
+
                 np.save(
-                    OUTPUT_PATH +
-                    config.crop_size + '/' +
+                    save_path_base +
                     os.path.basename(os.path.normpath(path)),
                     result
                 )
@@ -106,17 +111,20 @@ def main(config, dataframe):
     queue = Queue()
     unique_paths = list(
         dataframe.groupby('hdf5_16bit_path').groups.keys()
-    )[config.start_index, config.end_index]
+    )[config.start_index:config.end_index]
 
     for x in range(20):
-        worker = Worker(queue)
+        worker = Worker(queue, config)
         # Setting daemon to True will let the main thread exit even though the workers are blocking
         worker.daemon = True
         worker.start()
 
     for path in unique_paths:
-        print('Queueing {}'.format(path))
-        queue.put(path)
+        if path == "nan":
+            print('Nan encountered')
+        else:
+            print('Queueing {}'.format(path))
+            queue.put(path)
 
     queue.join()
     print('done')
