@@ -94,7 +94,7 @@ class Worker(Thread):
                 save_path_base = OUTPUT_PATH + str(self.config.crop_size) + '/'
 
                 if not(os.path.exists(save_path_base)):
-                    os.mkdir(save_path_base)
+                    os.makedirs(save_path_base)
 
                 np.save(
                     save_path_base +
@@ -150,7 +150,7 @@ if __name__ == '__main__':
         "--crop-size",
         type=int,
         help="size of the crop frame",
-        default=100
+        default=90
     )
     args = parser.parse_args()
 
