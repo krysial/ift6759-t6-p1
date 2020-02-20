@@ -38,9 +38,7 @@ class Worker(Thread):
         while True:
             path = self.queue.get()
             try:
-                print('WORKING')
                 self.worker_task(path)
-                PRINT('DONE')
             finally:
                 self.queue.task_done()
 
@@ -104,7 +102,7 @@ class Worker(Thread):
 if __name__ == '__main__':
     queue = Queue()
     dataframe = pd.read_pickle(DATAFRAME_PATH)
-    unique_paths = reversed(list(dataframe.groupby('hdf5_16bit_path').groups.keys()))[0]
+    unique_paths = list(dataframe.groupby('hdf5_16bit_path').groups.keys())
 
     for x in range(1):
         worker = Worker(queue)
