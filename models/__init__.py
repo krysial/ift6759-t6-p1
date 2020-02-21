@@ -7,6 +7,7 @@ from models.basecnn import BaseCNNModel
 from models.convlstm import ConvLSTMModel
 from models.conv3d import Conv3DModel
 from models.se_res_bilrcn import SE_Residual_BiLRCNModel
+from models.bilrcn import BiLRCNModel
 from tensorflow.keras.optimizers import *
 import os
 from tensorflow.keras.metrics import *
@@ -18,6 +19,7 @@ models = {
     "convlstm": ConvLSTMModel,
     "cnn3d": Conv3DModel,
     "se_res_bilrcn": SE_Residual_BiLRCNModel,
+    "bilrcn": BiLRCNModel,
 }
 
 
