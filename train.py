@@ -58,8 +58,8 @@ def main(
     stations = {"BND": target_stations["BND"]}
 
     DATASET_LENGTH = len(dataframe)
-    STEPS_PER_EPOCH = int(0.9 * DATASET_LENGTH) // user_config["batch_size"]
-    VALIDATION_STEPS = int(0.1 * DATASET_LENGTH) // user_config["batch_size"]
+    STEPS_PER_EPOCH = int(0.9 * DATASET_LENGTH)
+    VALIDATION_STEPS = int(0.1 * DATASET_LENGTH)
 
     if user_config['real']:
         # real dataloader is expecting a Dict {} object in evaluation

@@ -86,6 +86,9 @@ class Worker(Thread):
 
                                 self.stations_px_center = functools.reduce(red_coords_to_px, self.stations, {})
 
+                                del lats
+                                del lons
+
                             def crop(s):
                                 center = self.stations_px_center[s]
                                 px_x_ = center[0] - self.px_offset
@@ -111,7 +114,7 @@ class Worker(Thread):
 
                 end = time.time()
                 print('One file processed', end - start)
-                result = np.asanyarray(file_data)
+                result = np.asanyarray(file_data.copy())
                 del file_data
                 gc.collect()
                 np.save(
@@ -137,7 +140,7 @@ def main(config, dataframe):
 
     print('Processing ', len(unique_paths), ' files')
 
-    for x in range(10):
+    for x in range(15):
         worker = Worker(queue, config)
         # Setting daemon to True will let the main thread exit even though the workers are blocking
         worker.daemon = True

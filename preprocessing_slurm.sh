@@ -7,4 +7,4 @@
 
 module load python/3.7
 source /project/cq-training-1/project1/teams/team06/ift6759-env/bin/activate
-python preprocessing.py
+python preprocessing.py --start-index=103
