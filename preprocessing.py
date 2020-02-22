@@ -58,7 +58,7 @@ class Worker(Thread):
             dtype='float32',
             mode='w+',
             shape=(
-                len(config.channels),
+                len(self.config.channels),
                 96,
                 len(self.stations),
                 self.config.crop_size,
