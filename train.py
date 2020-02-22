@@ -253,13 +253,19 @@ if __name__ == "__main__":
         default="GHI"
     )
     parser.add_argument(
+        "-lr",
+        "--learning_rate",
+        type=float,
+        help="Learning rate for optimization",
+        default=1e-5,
+    )
+    parser.add_argument(
         "-dr",
         "--decay_rate",
         type=float,
         help="Decay rate",
         default=1e-5,
     )
-
     args = parser.parse_args()
 
     main(
