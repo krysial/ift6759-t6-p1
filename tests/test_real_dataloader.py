@@ -8,6 +8,6 @@ def dataloader():
 
 
 def test_sanity(dataloader):
-    dl = dataloader()
+    dl = dataloader
 
     assert True
