@@ -6,6 +6,7 @@ import typing
 import pandas as pd
 import time
 import tensorflow as tf
+import numpy as np
 
 from tensorflow.keras.callbacks import TensorBoard,\
     ModelCheckpoint, \
@@ -17,6 +18,9 @@ import dataloader.dataloader as real_prepare_dataloader
 import dataloader.synthetic_dataloader as synthetic_dataloader
 from models import prepare_model
 from dataloader.dataset_processing import dataset_concat_seq_images
+
+np.random.seed(12345)
+tf.random.set_seed(12345)
 
 
 def main(
@@ -56,7 +60,9 @@ def main(
                 user_config["train_end_bound"])]
     # filtering training entries that have nan as path
     training_dataframe = training_dataframe[training_dataframe.hdf5_16bit_path != 'nan']
+    training_dataframe = training_dataframe[training_dataframe.BND_DAYTIME == 1]
     training_datetimes = training_dataframe.index.to_list()
+    np.random.shuffle(training_datetimes)
 
     # val_dataframe
     val_dataframe = catalog_dataframe.copy()
@@ -70,6 +76,7 @@ def main(
                 user_config["val_end_bound"])]
     # filtering val entries that have nan as path
     val_dataframe = val_dataframe[val_dataframe.hdf5_16bit_path != 'nan']
+    val_dataframe = val_dataframe[val_dataframe.BND_DAYTIME == 1]
     validation_datetimes = val_dataframe.index.to_list()
 
     target_stations = admin_config["stations"]

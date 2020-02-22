@@ -13,14 +13,14 @@ class BaseCNNModel(tf.keras.Model):
     ):
         self = cls()
         self.cnn_model = tf.keras.Sequential([
-            tf.keras.layers.Conv2D(64, 5, strides=1, activation=tf.nn.relu),
+            tf.keras.layers.Conv2D(64, 5, activation=tf.nn.relu),
             tf.keras.layers.Conv2D(64, 5, strides=1, activation=tf.nn.relu),
             tf.keras.layers.MaxPool2D(pool_size=2, strides=2),
             tf.keras.layers.Conv2D(128, 3, strides=(1, 1), activation=tf.nn.relu),
             tf.keras.layers.MaxPool2D(pool_size=2, strides=2),
             tf.keras.layers.Flatten(),
             tf.keras.layers.Dense(units=512, activation=tf.nn.relu),
-            tf.keras.layers.Dense(units=len(target_time_offsets))
+            tf.keras.layers.Dense(units=len(target_time_offsets), activation=None)
         ])
 
         return self
