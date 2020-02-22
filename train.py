@@ -17,7 +17,6 @@ from models import models
 import dataloader.dataloader as real_prepare_dataloader
 import dataloader.synthetic_dataloader as synthetic_dataloader
 from models import prepare_model
-from dataloader.dataset_processing import dataset_concat_seq_images
 
 np.random.seed(12345)
 tf.random.set_seed(12345)
@@ -240,12 +239,6 @@ if __name__ == "__main__":
             DEFAULT_IMAGE_SIZE,
             len(DEFAULT_CHANNELS)
         )
-    )
-    parser.add_argument(
-        "--stack_seqs",
-        action='store_true',
-        help="stack seq images as channels in output tensor",
-        default=False
     )
     parser.add_argument(
         "--target_past_len",
