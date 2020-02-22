@@ -5,6 +5,7 @@ import json
 import pandas as pd
 import numpy as np
 import h5py
+import os
 import matplotlib.pyplot as plt
 
 from utils import utils
@@ -16,6 +17,21 @@ GOES13_DS = {
     'hdf516': ['hdf5_16bit_path', 'hdf5_16bit_offset'],
     'hdf508': ['hdf5_8bit_path', 'hdf5_8bit_offset']
 }
+
+
+def get_preprocessed_images(
+        dataframe: pd.DataFrame,
+        datetimes: typing.List[dt.datetime],
+        config: typing.Dict[typing.AnyStr, typing.Any],
+        station: typing.Dict[typing.AnyStr, typing.Tuple[float, float, float]],) -> np.ndarray:
+
+    channels = config['channels']
+    seqs = config['seq_len']
+    goes13_i_paths = get_frames_location(dataframe, datetimes, seqs, config['goes13_dataset'])
+    frames = fetch_preprocessed_frames(goes13_i_paths, channels, seqs, config, station)
+
+    assert frames.shape == (len(datetimes), seqs, len(channels), config['crop_size'], config['crop_size'])
+    return frames
 
 
 def get_raw_images(
@@ -70,6 +86,55 @@ def get_frames_location(dataframe, datetimes, seqs, dataset):
     df['offset'] = dataframe.loc[df['datetime']][columns[1]].to_list()
 
     return df
+
+
+def fetch_preprocessed_frames(frames_df, channels, seqs, config, station):
+    output = np.zeros((
+        1,
+        seqs,
+        len(channels),
+        config['crop_size'],
+        config['crop_size']
+    ))
+    paths_groups = frames_df.groupby('path', sort=False)
+
+    station_to_id = {
+        "BND": 0,
+        "TBL": 1,
+        "DRA": 2,
+        "FPK": 3,
+        "GWN": 4,
+        "PSU": 5,
+        "SXF": 6
+    }
+
+    for name, group in paths_groups:
+        filename = os.path.basename(os.path.normpath(name))
+        fullpath = config['cache_data_path'] + str(config['crop_size']) + '/' + filename
+
+        if os.path.exists(fullpath):
+            fp = np.memmap(
+                fullpath,
+                dtype='float32',
+                mode='r',
+                shape=(
+                    len(config['channels']),
+                    96,
+                    len(station_to_id),
+                    config['crop_size'],
+                    config['crop_size']
+                )
+            )
+
+            for index, row in group.iterrows():
+                position = row['position']
+                frame = row['offset']
+
+                output[position[0], position[1]] = \
+                    fp[:, position[0],
+                        station_to_id[next(iter(station))], :, :]
+
+    return output
 
 
 def fetch_frames(frames_df, channels, seqs):
