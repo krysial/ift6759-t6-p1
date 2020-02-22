@@ -43,11 +43,10 @@ def get_GHI_targets(
             # If target value is an invalid type or does not exist, pass
             try:
                 ghi = df.loc[t][f"{station}_{config['target_name']}"]
-                assert isinstance(ghi, np.float64)
-            except (AssertionError, KeyError):
+            except (KeyError):
                 pass
             else:
-                targets[i, j] = ghi
+                targets[i, j] = np.nan_to_num(ghi)
 
     return targets
 
