@@ -259,6 +259,14 @@ if __name__ == "__main__":
         help="past target name to append",
         default="GHI"
     )
+    parser.add_argument(
+        "-dr",
+        "--decay_rate",
+        type=float,
+        help="Decay rate",
+        default=1e-5,
+    )
+
     args = parser.parse_args()
 
     main(

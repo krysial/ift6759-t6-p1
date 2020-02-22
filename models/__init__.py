@@ -40,7 +40,7 @@ def prepare_model(
             )
         )
     else:
-        optimizer = Adam(lr=1e-5, decay=1e-6)
+        optimizer = Adam(lr=1e-5, decay=config['decay_rate'])
         model = models[config['model']].create(
             stations,
             target_time_offsets,
