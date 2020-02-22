@@ -66,9 +66,11 @@ class Worker(Thread):
             )
         )
 
+        start = time.time()
         for i, line in enumerate(self.generator(data)):
             fp[i] = line
             fp.flush()
+        print('1 file took:', time.time() - start)
 
     def generator(self, data):
         lats = None
@@ -79,7 +81,6 @@ class Worker(Thread):
             if os.path.isfile(path):
                 with h5py.File(path, "r") as h5_data:
                     file_data = []
-                    start = time.time()
                     for channel in ['ch1', 'ch2', 'ch3', 'ch4', 'ch6']:
                         ch_images = []
                         for offset in range(96):
@@ -104,7 +105,6 @@ class Worker(Thread):
 
                                         del lat
                                         del lon
-                                        gc.collect()
 
                                         aggre[s] = (int(px_lat), int(px_lon))
                                         return aggre
@@ -121,16 +121,12 @@ class Worker(Thread):
                                     px_x = center[0] + self.px_offset
                                     px_y_ = center[1] - self.px_offset
                                     px_y = center[1] + self.px_offset
-                                    gc.collect()
                                     crop = channel_idx_data[px_x_:px_x, px_y_:px_y].copy()
                                     return crop
 
                                 ch_images.append(list(map(crop, self.stations_px_center)))
 
-                                del channel_idx_data
-                                gc.collect()
-
-                        yield np.asanyarray(ch_images.copy())
+                        yield ch_images
         finally:
             del ch_images
             gc.collect()
