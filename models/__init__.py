@@ -4,13 +4,16 @@ import tensorflow as tf
 from models.dummy import DummyModel
 from models.lrcn import LRCNModel
 from models.basecnn import BaseCNNModel
+from models.se_res_bilrcn import SE_Residual_BiLRCNModel
 from tensorflow.keras.optimizers import *
 import os
+from tensorflow.keras.metrics import *
 
 models = {
     "dummy": DummyModel,
     "lrcn": LRCNModel,
-    "basecnn": BaseCNNModel
+    "basecnn": BaseCNNModel,
+    "se_res_bilrcn": SE_Residual_BiLRCNModel,
 }
 
 
