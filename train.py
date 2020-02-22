@@ -273,7 +273,6 @@ if __name__ == "__main__":
         help="Decay rate",
         default=1e-5,
     )
-    
     args = parser.parse_args()
 
     main(
