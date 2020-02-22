@@ -5,6 +5,7 @@ from models.dummy import DummyModel
 from models.lrcn import LRCNModel
 from models.basecnn import BaseCNNModel
 from tensorflow.keras.optimizers import *
+import os
 
 models = {
     "dummy": DummyModel,
@@ -39,7 +40,7 @@ def prepare_model(
             )
         )
     else:
-        optimizer = Adam(lr=config['learning_rate'], decay=1e-6)
+        optimizer = Adam(lr=config['learning_rate'], decay=config['decay_rate'])
         model = models[config['model']].create(
             stations,
             target_time_offsets,
