@@ -51,6 +51,21 @@ def prepare_dataloader(
         }, tf.float32)
     )
 
+    # Second step: Estimate/Calculate station
+    # coordinates on image and crop area dimensions
+    stations_px = get_station_px_center(dataframe, station)
+    if config['crop_size'] is None or config['crop_size'] == 0:
+        config['crop_size'] = get_crop_size(stations_px, data_loader)
+
+    # Third step: Processing using map (cropping for stations)
+    crop_image_fn = dataset_processing(
+        stations_px=stations_px,
+        station=station,
+        config=config
+    )
+
+    data_loader = data_loader.map(crop_image_fn, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+
     data_loader = data_loader.batch(config['batch_size'])
 
     # Final step of data loading pipeline: Return the dataset loading object
