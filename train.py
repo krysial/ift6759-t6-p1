@@ -6,6 +6,7 @@ import typing
 import pandas as pd
 import time
 import tensorflow as tf
+import numpy as np
 
 from tensorflow.keras.callbacks import TensorBoard,\
     ModelCheckpoint, \
@@ -16,6 +17,9 @@ from models import models
 import dataloader.dataloader as real_prepare_dataloader
 import dataloader.synthetic_dataloader as synthetic_dataloader
 from models import prepare_model
+
+np.random.seed(12345)
+tf.random.set_seed(12345)
 
 
 def main(
@@ -39,26 +43,53 @@ def main(
     with open(admin_config_path, "r") as fd:
         admin_config = json.load(fd)
 
-    dataframe_path = admin_config["dataframe_path"]
-    assert os.path.isfile(dataframe_path), f"invalid dataframe path: {dataframe_path}"
-    dataframe = pd.read_pickle(dataframe_path)
+# training dataframe
+    catalog_dataframe_path = user_config["train_dataset_path"]
+    assert os.path.isfile(catalog_dataframe_path), f"invalid dataframe path: {catalog_dataframe_path}"
+    catalog_dataframe = pd.read_pickle(catalog_dataframe_path)
 
-    if "start_bound" in admin_config:
-        dataframe = dataframe[dataframe.index >= datetime.datetime.fromisoformat(admin_config["start_bound"])]
-    if "end_bound" in admin_config:
-        dataframe = dataframe[dataframe.index < datetime.datetime.fromisoformat(admin_config["end_bound"])]
+    training_dataframe = catalog_dataframe.copy()
+    if user_config['train_start_bound']:
+        training_dataframe = \
+            training_dataframe[training_dataframe.index >= datetime.datetime.fromisoformat(
+                user_config['train_start_bound'])]
+    if user_config["train_end_bound"]:
+        training_dataframe = \
+            training_dataframe[training_dataframe.index < datetime.datetime.fromisoformat(
+                user_config["train_end_bound"])]
+    # filtering training entries that have nan as path
+    training_dataframe = training_dataframe[training_dataframe.hdf5_16bit_path != 'nan']
+    training_dataframe = training_dataframe[training_dataframe.BND_DAYTIME == 1]
+    training_datetimes = training_dataframe.index.to_list()
+    np.random.shuffle(training_datetimes)
 
-    target_datetimes = [datetime.datetime.fromisoformat(d) for d in admin_config["target_datetimes"]]
-    assert target_datetimes and all([d in dataframe.index for d in target_datetimes])
+    # val_dataframe
+    val_dataframe = catalog_dataframe.copy()
+    if user_config["val_start_bound"]:
+        val_dataframe = \
+            val_dataframe[val_dataframe.index >= datetime.datetime.fromisoformat(
+                user_config["val_start_bound"])]
+    if user_config["val_end_bound"]:
+        val_dataframe = \
+            val_dataframe[val_dataframe.index < datetime.datetime.fromisoformat(
+                user_config["val_end_bound"])]
+    # filtering val entries that have nan as path
+    val_dataframe = val_dataframe[val_dataframe.hdf5_16bit_path != 'nan']
+    val_dataframe = val_dataframe[val_dataframe.BND_DAYTIME == 1]
+    validation_datetimes = val_dataframe.index.to_list()
+
     target_stations = admin_config["stations"]
-    target_time_offsets = [pd.Timedelta(d).to_pytimedelta() for d in admin_config["target_time_offsets"]]
+    target_time_offsets = [pd.Timedelta(d).to_pytimedelta(
+    ) for d in admin_config["target_time_offsets"]]
 
     # TODO URGENTLY!!! make sure we train on all stations
     stations = {"BND": target_stations["BND"]}
 
-    DATASET_LENGTH = len(dataframe)
-    STEPS_PER_EPOCH = int(0.9 * DATASET_LENGTH) // user_config["batch_size"]
-    VALIDATION_STEPS = int(0.1 * DATASET_LENGTH) // user_config["batch_size"]
+    TRAIN_DT_LENGTH = len(training_datetimes)
+    VAL_DT_LENGTH = len(validation_datetimes)
+
+    STEPS_PER_EPOCH = int(TRAIN_DT_LENGTH) // user_config["batch_size"]
+    VALIDATION_STEPS = int(VAL_DT_LENGTH) // user_config["batch_size"]
 
     if user_config['real']:
         # real dataloader is expecting a Dict {} object in evaluation
@@ -67,9 +98,17 @@ def main(
         # load synthetic data
         prepare_dataloader = synthetic_dataloader.prepare_dataloader
 
-    data_loader = prepare_dataloader(
-        dataframe,
-        target_datetimes,
+    train_data_loader = prepare_dataloader(
+        training_dataframe,
+        training_datetimes,
+        stations,
+        target_time_offsets,
+        user_config
+    ).prefetch(tf.data.experimental.AUTOTUNE)
+
+    val_data_loader = prepare_dataloader(
+        val_dataframe,
+        validation_datetimes,
         stations,
         target_time_offsets,
         user_config
@@ -115,13 +154,14 @@ def main(
     )
 
     model.fit_generator(
-        data_loader,
+        train_data_loader,
         epochs=user_config['epoch'],
         use_multiprocessing=True,
         workers=32,
         callbacks=[tb, csv_logger],
         steps_per_epoch=STEPS_PER_EPOCH,
-        validation_steps=VALIDATION_STEPS
+        validation_steps=VALIDATION_STEPS,
+        validation_data=val_data_loader
     )
 
     print(model.summary())
@@ -212,6 +252,14 @@ if __name__ == "__main__":
         help="past target name to append",
         default="GHI"
     )
+    parser.add_argument(
+        "-dr",
+        "--decay_rate",
+        type=float,
+        help="Decay rate",
+        default=1e-5,
+    )
+
     args = parser.parse_args()
 
     main(

@@ -1,6 +1,8 @@
 import tensorflow as tf
 import typing
 
+MAX_GHI = 1500
+
 
 def dataset_processing(
         stations_px: typing.Dict[typing.AnyStr, typing.Tuple[float, float]],
@@ -42,3 +44,4 @@ def dataset_processing(
         return data, target_tensor_
 
     return processor
+
