@@ -16,7 +16,7 @@ from models import models
 import dataloader.dataloader as real_prepare_dataloader
 import dataloader.synthetic_dataloader as synthetic_dataloader
 from models import prepare_model
-from dataloader.dataset_processing import dataset_concat_seq_images
+from dataloader.dataset_processing import dataset_concat_seq_images, interpolate_GHI
 
 
 def main(
@@ -71,6 +71,10 @@ def main(
     # filtering val entries that have nan as path
     val_dataframe = val_dataframe[val_dataframe.hdf5_16bit_path != 'nan']
     validation_datetimes = val_dataframe.index.to_list()
+
+    # Interpolate missing GHI values
+    training_dataframe = interpolate_GHI(training_dataframe)
+    val_dataframe = interpolate_GHI(val_dataframe)
 
     target_stations = admin_config["stations"]
     target_time_offsets = [pd.Timedelta(d).to_pytimedelta(

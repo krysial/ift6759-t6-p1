@@ -51,3 +51,10 @@ def dataset_concat_seq_images(data, target_tensor):
 
     data['images'] = concatenated
     return data, target_tensor
+
+
+def interpolate_GHI(data):
+    """Time-based linear interpolation for missing GHI values in the given dataframe."""
+    for station in ['BND', 'TBL', 'DRA', 'FPK', 'GWN', 'PSU', 'SXF']:
+        data[f'{station}_GHI'].interpolate(method='time', inplace=True)
+    return data
