@@ -4,11 +4,10 @@ from dataloader.dataloader import prepare_dataloader
 
 @pytest.fixture
 def dataloader():
-    return prepare_dataloader()
+    return True
 
 
 def test_sanity(dataloader):
-    dl = dataloader(
-    )
+    dl = dataloader()
 
     assert True
