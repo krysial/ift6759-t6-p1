@@ -10,7 +10,6 @@ import numpy as np
 from utils.time_distributed import TimeDistributed
 
 
-
 class BiLRCNModel(BaseModel):
 
     @classmethod
@@ -25,25 +24,24 @@ class BiLRCNModel(BaseModel):
         initialiser = 'glorot_uniform'
         reg_lambda = 0.001
 
-
         def img_model():
 
             def add_default_block(model, kernel_filters, init, reg_lambda):
                 # conv
                 model = TimeDistributed(
-                            Conv2D(
-                                kernel_filters, (3, 3), padding='same',
-                                kernel_initializer=init, kernel_regularizer=l2(reg_lambda)
-                            )
+                    Conv2D(
+                        kernel_filters, (3, 3), padding='same',
+                        kernel_initializer=init, kernel_regularizer=l2(reg_lambda)
+                    )
                 )(model)
                 model = TimeDistributed(BatchNormalization())(model)
                 model = TimeDistributed(Activation('relu'))(model)
                 # conv
                 model = TimeDistributed(
-                            Conv2D(
-                                kernel_filters, (3, 3), padding='same',
-                                kernel_initializer=init, kernel_regularizer=l2(reg_lambda)
-                            )
+                    Conv2D(
+                        kernel_filters, (3, 3), padding='same',
+                        kernel_initializer=init, kernel_regularizer=l2(reg_lambda)
+                    )
                 )(model)
                 model = TimeDistributed(BatchNormalization())(model)
                 model = TimeDistributed(Activation('relu'))(model)
@@ -55,21 +53,21 @@ class BiLRCNModel(BaseModel):
             img_input_shape = (config['seq_len'], config['crop_size'], config['crop_size'], len(config['channels']))
             img_in = Input(shape=img_input_shape)
             m = TimeDistributed(
-                    Conv2D(
-                        32, (8, 8), padding='same',
-                        kernel_initializer=initialiser,
-                        kernel_regularizer=l2(reg_lambda)
-                    )
-                )(img_in)
+                Conv2D(
+                    32, (8, 8), padding='same',
+                    kernel_initializer=initialiser,
+                    kernel_regularizer=l2(reg_lambda)
+                )
+            )(img_in)
 
             m = TimeDistributed(BatchNormalization())(m)
             m = TimeDistributed(Activation('relu'))(m)
             m = TimeDistributed(
-                    Conv2D(
-                        32, (3, 3), kernel_initializer=initialiser,
-                        kernel_regularizer=l2(reg_lambda)
-                    )
-                )(m)
+                Conv2D(
+                    32, (3, 3), kernel_initializer=initialiser,
+                    kernel_regularizer=l2(reg_lambda)
+                )
+            )(m)
             m = TimeDistributed(BatchNormalization())(m)
             m = TimeDistributed(Activation('relu'))(m)
             m = TimeDistributed(MaxPooling2D((2, 2), strides=(2, 2)))(m)
