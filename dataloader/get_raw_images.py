@@ -7,6 +7,7 @@ import numpy as np
 import h5py
 import os
 import matplotlib.pyplot as plt
+import tensorflow as tf
 
 from utils import utils
 
@@ -54,7 +55,7 @@ def get_raw_images(
     channels = config['channels']
     seqs = config['seq_len']
     goes13_i_paths = get_frames_location(dataframe, datetimes, seqs, config['goes13_dataset'])
-    frames = fetch_frames(goes13_i_paths, channels, seqs)
+    frames = fetch_frames(datetimes, goes13_i_paths, channels, seqs)
 
     assert frames.shape == (len(datetimes), seqs, len(channels), IMAGE_HEIGHT, IMAGE_WIDTH)
     return frames
@@ -70,7 +71,7 @@ def read_conf_file(path):
 
 def get_frames_location(dataframe, datetimes, seqs, dataset):
 
-    columns = GOES13_DS[dataset] if dataset else 'hdf516'
+    columns = GOES13_DS[dataset] if dataset else GOES13_DS['hdf516']
     offset = 15
     dt_seqs = []
 
@@ -82,10 +83,11 @@ def get_frames_location(dataframe, datetimes, seqs, dataset):
             })
 
     df = pd.DataFrame(dt_seqs)
-    df['path'] = dataframe.loc[df['datetime']][columns[0]].to_list()
-    df['offset'] = dataframe.loc[df['datetime']][columns[1]].to_list()
+    seq_datetimes = df['datetime']
+    df['path'] = dataframe.reindex(seq_datetimes)[columns[0]].to_list()
+    df['offset'] = dataframe.reindex(seq_datetimes)[columns[1]].to_list()
 
-    return df
+    return df.dropna()
 
 
 def fetch_preprocessed_frames(frames_df, channels, seqs, config, station):
@@ -137,8 +139,8 @@ def fetch_preprocessed_frames(frames_df, channels, seqs, config, station):
     return output
 
 
-def fetch_frames(frames_df, channels, seqs):
-    output = np.empty((frames_df.shape[0] // seqs, seqs, len(channels), IMAGE_HEIGHT, IMAGE_WIDTH))
+def fetch_frames(datetimes, frames_df, channels, seqs):
+    output = np.empty((len(datetimes), seqs, len(channels), IMAGE_HEIGHT, IMAGE_WIDTH))
 
     paths_groups = frames_df.groupby('path', sort=False)
 
@@ -150,8 +152,9 @@ def fetch_frames(frames_df, channels, seqs):
                 for c, channel in enumerate(channels):
                     channel_idx_data = utils.fetch_hdf5_sample(channel, h5_data, frame)
                     if channel_idx_data is None or channel_idx_data.shape != (IMAGE_HEIGHT, IMAGE_WIDTH):
-                        channel_idx_data = 0
-                    output[position[0], position[1], c] = channel_idx_data
+                        output[position[0], position[1], c] = 0
+                    else:
+                        output[position[0], position[1], c] = tf.keras.utils.normalize(channel_idx_data)
 
     return output
 

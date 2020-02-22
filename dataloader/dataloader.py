@@ -7,7 +7,7 @@ import functools
 import typing
 
 from dataloader.get_crop_size import get_crop_size
-from dataloader.dataset_processing import dataset_processing, dataset_concat_seq_images
+from dataloader.dataset_processing import dataset_processing
 from dataloader.real import create_data_generator
 from dataloader.get_station_px_center import get_station_px_center
 
@@ -65,8 +65,6 @@ def prepare_dataloader(
     # )
 
     # data_loader = data_loader.map(crop_image_fn, num_parallel_calls=tf.data.experimental.AUTOTUNE)
-    # if config['stack_seqs']:
-    #     data_loader = data_loader.map(dataset_concat_seq_images, num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
     data_loader = data_loader.batch(config['batch_size'])
 
