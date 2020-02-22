@@ -44,4 +44,3 @@ def dataset_processing(
         return data, target_tensor_
 
     return processor
-
