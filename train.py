@@ -170,7 +170,7 @@ def main(
 if __name__ == "__main__":
     DEFAULT_SEQ_LEN = 6
     DEFAULT_CHANNELS = ["ch1", "ch2", "ch3", "ch4", "ch6"]
-    DEFAULT_IMAGE_SIZE = 40
+    DEFAULT_IMAGE_SIZE = 80
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
