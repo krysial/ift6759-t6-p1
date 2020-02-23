@@ -7,7 +7,7 @@ import functools
 import typing
 
 from dataloader.get_crop_size import get_crop_size
-from dataloader.dataset_processing import dataset_processing, normalize_station_GHI, normalize_CLEARSKY_GHI
+from dataloader.dataset_processing import *
 from dataloader.real import create_data_generator
 from dataloader.get_station_px_center import get_station_px_center
 
@@ -52,6 +52,10 @@ def prepare_dataloader(
     )
 
     data_loader = data_loader.batch(config['batch_size']).repeat()
+    data_loader = data_loader.map(transposing, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+    if config['crop_size'] != 80:
+        cropper = presaved_crop(config=config)
+        data_loader = data_loader.map(cropper, num_parallel_calls=tf.data.experimental.AUTOTUNE)
     data_loader = data_loader.map(normalize_station_GHI, num_parallel_calls=tf.data.experimental.AUTOTUNE)
     data_loader = data_loader.map(normalize_CLEARSKY_GHI, num_parallel_calls=tf.data.experimental.AUTOTUNE)
 

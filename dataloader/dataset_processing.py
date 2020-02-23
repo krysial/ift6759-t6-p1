@@ -34,12 +34,30 @@ def dataset_processing(
 
     def processor(data, target_tensor):
         # Updated image tensor
-        image_tensor = crop(data['images'], list(station.keys())[0])
-        image_tensor = tf.transpose(image_tensor, [0, 2, 3, 1])
-        data['images'] = image_tensor
+        data['images'] = crop(data['images'], list(station.keys())[0])
+        data['images'] = tf.transpose(data['images'], [0, 2, 3, 1])
         return data, target_tensor
 
     return processor
+
+
+def transposing(data, target_tensor):
+    # (batch, seq, ch, dim, dim) -> (batch, seq, dim, dim, ch)
+    data['images'] = tf.transpose(data['images'], [0, 1, 3, 4, 2])
+    return data, target_tensor
+
+
+def presaved_crop(config):
+    def presaved_cropping(data, target_tensor):
+        center = [40, 40]
+        px_offset = config['crop_size'] // 2
+        px_x_ = center[0] - px_offset
+        px_x = center[0] + px_offset
+        px_y_ = center[1] - px_offset
+        px_y = center[1] + px_offset
+        data['images'] = data['images'][:, :, px_y_:px_y, px_x_:px_x, :]
+        return data, target_tensor
+    return presaved_cropping
 
 
 def normalize_station_GHI(data, target_tensor):

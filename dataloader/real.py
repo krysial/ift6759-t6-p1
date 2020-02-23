@@ -55,7 +55,7 @@ def create_data_generator(
                 config
             )
             yield {
-                'images': np.transpose(images[0], [0, 2, 3, 1]),
+                'images': images[0],
                 'clearsky': clearsky[0],
             }, targets[0]
 
