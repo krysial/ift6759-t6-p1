@@ -51,7 +51,7 @@ def prepare_dataloader(
         }, tf.float32)
     )
 
-    data_loader = data_loader.batch(config['batch_size'])
+    data_loader = data_loader.batch(config['batch_size']).repeat()
     data_loader = data_loader.map(normalize_station_GHI, num_parallel_calls=tf.data.experimental.AUTOTUNE)
     data_loader = data_loader.map(normalize_CLEARSKY_GHI, num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
