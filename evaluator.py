@@ -11,6 +11,7 @@ import tqdm
 
 from dataloader.dataloader import prepare_dataloader as prepare_dataloader_t06
 from models import prepare_model as prepare_model_eval
+from utils.rescale_GHI import rescale_GHI
 
 
 def prepare_dataloader(
@@ -61,6 +62,7 @@ def generate_predictions(data_loader: tf.data.Dataset, model: tf.keras.Model, pr
                 pred = model(minibatch[:-1])
             if isinstance(pred, tf.Tensor):
                 pred = pred.numpy()
+            pred = rescale_GHI(pred)
             assert pred.ndim == 2, "prediction tensor shape should be BATCH x SEQ_LENGTH"
             predictions.append(pred)
             pbar.update(len(pred))
