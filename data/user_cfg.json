@@ -18,5 +18,5 @@
     "model_id": null,
     "learning_rate": 1e-2,
     "decay_rate": 1e-4,
-    "input_past_interval": 15,
+    "input_past_interval": 15
 }
