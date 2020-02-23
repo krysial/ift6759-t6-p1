@@ -175,7 +175,7 @@ def main(
 if __name__ == "__main__":
     DEFAULT_SEQ_LEN = 6
     DEFAULT_CHANNELS = ["ch1", "ch2", "ch3", "ch4", "ch6"]
-    DEFAULT_IMAGE_SIZE = 40
+    DEFAULT_IMAGE_SIZE = 80
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -250,6 +250,18 @@ if __name__ == "__main__":
         type=int,
         help="past number of targets to append to target output",
         default=1
+    )
+    parser.add_argument(
+        "--target_past_interval",
+        type=int,
+        help="past intervel to append the target output",
+        default=15
+    )
+    parser.add_argument(
+        "--input_past_interval",
+        type=int,
+        help="past intervel to append the input",
+        default=15
     )
     parser.add_argument(
         "--target_name",

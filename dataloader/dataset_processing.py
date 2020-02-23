@@ -34,20 +34,51 @@ def dataset_processing(
 
     def processor(data, target_tensor):
         # Updated image tensor
-        image_tensor_ = crop(data['images'], list(station.keys())[0])
-        image_tensor_ = tf.transpose(image_tensor_, [0, 2, 3, 1])
-
-        # Updated target tensor
-        target_tensor_ = target_tensor
-
-        data['images'] = image_tensor_
-        return data, target_tensor_
+        data['images'] = crop(data['images'], list(station.keys())[0])
+        data['images'] = tf.transpose(data['images'], [0, 2, 3, 1])
+        return data, target_tensor
 
     return processor
-
+ 
 
 def interpolate_GHI(data):
     """Time-based linear interpolation for missing GHI values in the given dataframe."""
     for station in ['BND', 'TBL', 'DRA', 'FPK', 'GWN', 'PSU', 'SXF']:
         data[f'{station}_GHI'].interpolate(method='time', inplace=True)
     return data
+
+
+def transposing(data, target_tensor):
+    # (batch, seq, ch, dim, dim) -> (batch, seq, dim, dim, ch)
+    data['images'] = tf.transpose(data['images'], [0, 1, 3, 4, 2])
+    return data, target_tensor
+
+
+def presaved_crop(config):
+    def presaved_cropping(data, target_tensor):
+        center = [40, 40]
+        px_offset = config['crop_size'] // 2
+        px_x_ = center[0] - px_offset
+        px_x = center[0] + px_offset
+        px_y_ = center[1] - px_offset
+        px_y = center[1] + px_offset
+        data['images'] = data['images'][:, :, px_y_:px_y, px_x_:px_x, :]
+        return data, target_tensor
+    return presaved_cropping
+
+
+def normalize_station_GHI(data, target_tensor):
+    # Quantile based normalization
+    median_station_GHI = 297.487143
+    quantile_diff_station_GHI = 470.059048
+    target_tensor_ = tf.math.divide(tf.math.subtract(target_tensor, median_station_GHI), quantile_diff_station_GHI)
+    return data, target_tensor_
+
+
+def normalize_CLEARSKY_GHI(data, target_tensor):
+    # Quantile based normalization
+    median_CLEARSKY_GHI = 448.994217
+    quantile_diff_CLEARSKY_GHI = 501.285528
+    clearsky_tensor = tf.math.divide(tf.math.subtract(data['clearsky'], median_CLEARSKY_GHI), quantile_diff_CLEARSKY_GHI)
+    data['clearsky'] = clearsky_tensor
+    return data, target_tensor

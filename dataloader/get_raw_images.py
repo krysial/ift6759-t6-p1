@@ -5,6 +5,7 @@ import json
 import pandas as pd
 import numpy as np
 import h5py
+import os
 import matplotlib.pyplot as plt
 import tensorflow as tf
 
@@ -12,11 +13,27 @@ from utils import utils
 
 IMAGE_HEIGHT = 650
 IMAGE_WIDTH = 1500
+PRESAVED_IMAGE_DIMS = 80
 DT_FORMAT = '%Y-%m-%dT%H:%M:%S'
 GOES13_DS = {
     'hdf516': ['hdf5_16bit_path', 'hdf5_16bit_offset'],
     'hdf508': ['hdf5_8bit_path', 'hdf5_8bit_offset']
 }
+
+
+def get_preprocessed_images(
+        dataframe: pd.DataFrame,
+        datetimes: typing.List[dt.datetime],
+        config: typing.Dict[typing.AnyStr, typing.Any],
+        station: typing.Dict[typing.AnyStr, typing.Tuple[float, float, float]],) -> np.ndarray:
+
+    channels = config['channels']
+    seqs = config['seq_len']
+    goes13_i_paths = get_frames_location(dataframe, datetimes, seqs, config['goes13_dataset'], config)
+    frames = fetch_preprocessed_frames(goes13_i_paths, channels, seqs, config, station)
+
+    assert frames.shape == (len(datetimes), seqs, len(channels), PRESAVED_IMAGE_DIMS, PRESAVED_IMAGE_DIMS)
+    return frames
 
 
 def get_raw_images(
@@ -38,7 +55,7 @@ def get_raw_images(
 
     channels = config['channels']
     seqs = config['seq_len']
-    goes13_i_paths = get_frames_location(dataframe, datetimes, seqs, config['goes13_dataset'])
+    goes13_i_paths = get_frames_location(dataframe, datetimes, seqs, config['goes13_dataset'], config)
     frames = fetch_frames(datetimes, goes13_i_paths, channels, seqs)
 
     assert frames.shape == (len(datetimes), seqs, len(channels), IMAGE_HEIGHT, IMAGE_WIDTH)
@@ -53,10 +70,10 @@ def read_conf_file(path):
     return config
 
 
-def get_frames_location(dataframe, datetimes, seqs, dataset):
+def get_frames_location(dataframe, datetimes, seqs, dataset, config):
 
     columns = GOES13_DS[dataset] if dataset else GOES13_DS['hdf516']
-    offset = 15
+    offset = config['input_past_interval']
     dt_seqs = []
 
     for i, datetime in enumerate(datetimes):
@@ -72,6 +89,55 @@ def get_frames_location(dataframe, datetimes, seqs, dataset):
     df['offset'] = dataframe.reindex(seq_datetimes)[columns[1]].to_list()
 
     return df.dropna()
+
+
+def fetch_preprocessed_frames(frames_df, channels, seqs, config, station):
+    output = np.zeros((
+        1,
+        seqs,
+        len(channels),
+        PRESAVED_IMAGE_DIMS,
+        PRESAVED_IMAGE_DIMS
+    ))
+    paths_groups = frames_df.groupby('path', sort=False)
+
+    station_to_id = {
+        "BND": 0,
+        "TBL": 1,
+        "DRA": 2,
+        "FPK": 3,
+        "GWN": 4,
+        "PSU": 5,
+        "SXF": 6
+    }
+
+    for name, group in paths_groups:
+        filename = os.path.basename(os.path.normpath(name))
+        fullpath = config['cache_data_path'] + str(PRESAVED_IMAGE_DIMS) + '/' + filename
+
+        if os.path.exists(fullpath):
+            fp = np.memmap(
+                fullpath,
+                dtype='float32',
+                mode='r',
+                shape=(
+                    len(config['channels']),
+                    96,
+                    len(station_to_id),
+                    PRESAVED_IMAGE_DIMS,
+                    PRESAVED_IMAGE_DIMS
+                )
+            )
+
+            for index, row in group.iterrows():
+                position = row['position']
+                frame = row['offset']
+
+                output[position[0], position[1]] = \
+                    fp[:, position[0],
+                        station_to_id[next(iter(station))], :, :]
+
+    return output
 
 
 def fetch_frames(datetimes, frames_df, channels, seqs):
