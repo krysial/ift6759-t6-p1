@@ -72,7 +72,7 @@ def read_conf_file(path):
 def get_frames_location(dataframe, datetimes, seqs, dataset):
 
     columns = GOES13_DS[dataset] if dataset else GOES13_DS['hdf516']
-    offset = 15
+    offset = config['input_past_interval']
     dt_seqs = []
 
     for i, datetime in enumerate(datetimes):

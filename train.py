@@ -247,6 +247,18 @@ if __name__ == "__main__":
         default=1
     )
     parser.add_argument(
+        "--target_past_interval",
+        type=int,
+        help="past intervel to append the target output",
+        default=15
+    )
+    parser.add_argument(
+        "--input_past_interval",
+        type=int,
+        help="past intervel to append the input",
+        default=15
+    )
+    parser.add_argument(
         "--target_name",
         type=str,
         help="past target name to append",
