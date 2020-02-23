@@ -95,7 +95,7 @@ class SE_Residual_BiLRCNModel(BaseModel):
         img_in, img_out = img_model()
         clearsky_in, clearsky_out = clearsky_model()
 
-        m = Add()([img_out, clearsky_out])
+        m = Concatenate()([img_out, clearsky_out])
 
         m = TimeDistributed(BatchNormalization())(m)
         m = Bidirectional(LSTM(512, dropout=0.3, return_sequences=True))(m)
