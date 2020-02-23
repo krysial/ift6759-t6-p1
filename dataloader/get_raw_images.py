@@ -13,6 +13,7 @@ from utils import utils
 
 IMAGE_HEIGHT = 650
 IMAGE_WIDTH = 1500
+PRESAVED_IMAGE_DIMS = 80
 DT_FORMAT = '%Y-%m-%dT%H:%M:%S'
 GOES13_DS = {
     'hdf516': ['hdf5_16bit_path', 'hdf5_16bit_offset'],
@@ -28,10 +29,10 @@ def get_preprocessed_images(
 
     channels = config['channels']
     seqs = config['seq_len']
-    goes13_i_paths = get_frames_location(dataframe, datetimes, seqs, config['goes13_dataset'])
+    goes13_i_paths = get_frames_location(dataframe, datetimes, seqs, config['goes13_dataset'], config)
     frames = fetch_preprocessed_frames(goes13_i_paths, channels, seqs, config, station)
 
-    assert frames.shape == (len(datetimes), seqs, len(channels), config['crop_size'], config['crop_size'])
+    assert frames.shape == (len(datetimes), seqs, len(channels), PRESAVED_IMAGE_DIMS, PRESAVED_IMAGE_DIMS)
     return frames
 
 
@@ -54,7 +55,7 @@ def get_raw_images(
 
     channels = config['channels']
     seqs = config['seq_len']
-    goes13_i_paths = get_frames_location(dataframe, datetimes, seqs, config['goes13_dataset'])
+    goes13_i_paths = get_frames_location(dataframe, datetimes, seqs, config['goes13_dataset'], config)
     frames = fetch_frames(datetimes, goes13_i_paths, channels, seqs)
 
     assert frames.shape == (len(datetimes), seqs, len(channels), IMAGE_HEIGHT, IMAGE_WIDTH)
@@ -69,7 +70,7 @@ def read_conf_file(path):
     return config
 
 
-def get_frames_location(dataframe, datetimes, seqs, dataset):
+def get_frames_location(dataframe, datetimes, seqs, dataset, config):
 
     columns = GOES13_DS[dataset] if dataset else GOES13_DS['hdf516']
     offset = config['input_past_interval']
@@ -95,8 +96,8 @@ def fetch_preprocessed_frames(frames_df, channels, seqs, config, station):
         1,
         seqs,
         len(channels),
-        config['crop_size'],
-        config['crop_size']
+        PRESAVED_IMAGE_DIMS,
+        PRESAVED_IMAGE_DIMS
     ))
     paths_groups = frames_df.groupby('path', sort=False)
 
@@ -112,7 +113,7 @@ def fetch_preprocessed_frames(frames_df, channels, seqs, config, station):
 
     for name, group in paths_groups:
         filename = os.path.basename(os.path.normpath(name))
-        fullpath = config['cache_data_path'] + str(config['crop_size']) + '/' + filename
+        fullpath = config['cache_data_path'] + str(PRESAVED_IMAGE_DIMS) + '/' + filename
 
         if os.path.exists(fullpath):
             fp = np.memmap(
@@ -123,8 +124,8 @@ def fetch_preprocessed_frames(frames_df, channels, seqs, config, station):
                     len(config['channels']),
                     96,
                     len(station_to_id),
-                    config['crop_size'],
-                    config['crop_size']
+                    PRESAVED_IMAGE_DIMS,
+                    PRESAVED_IMAGE_DIMS
                 )
             )
 
