@@ -34,13 +34,26 @@ def dataset_processing(
 
     def processor(data, target_tensor):
         # Updated image tensor
-        image_tensor_ = crop(data['images'], list(station.keys())[0])
-        image_tensor_ = tf.transpose(image_tensor_, [0, 2, 3, 1])
-
-        # Updated target tensor
-        target_tensor_ = target_tensor
-
-        data['images'] = image_tensor_
-        return data, target_tensor_
+        image_tensor = crop(data['images'], list(station.keys())[0])
+        image_tensor = tf.transpose(image_tensor, [0, 2, 3, 1])
+        data['images'] = image_tensor
+        return data, target_tensor
 
     return processor
+
+
+def normalize_station_GHI(data, target_tensor):
+    # Quantile based normalization
+    median_station_GHI = 297.487143 
+    quantile_diff_station_GHI = 470.059048
+    target_tensor_ = tf.math.divide(tf.math.subtract(target_tensor, median_station_GHI), quantile_diff_station_GHI)
+    return data, target_tensor_
+
+
+def normalize_CLEARSKY_GHI(data, target_tensor):
+    # Quantile based normalization
+    median_CLEARSKY_GHI = 448.994217 
+    quantile_diff_CLEARSKY_GHI = 501.285528
+    clearsky_tensor = tf.math.divide(tf.math.subtract(data['clearsky'], median_CLEARSKY_GHI), quantile_diff_CLEARSKY_GHI)
+    data['clearsky'] = clearsky_tensor
+    return data, target_tensor
