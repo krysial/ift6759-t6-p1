@@ -39,7 +39,7 @@ def dataset_processing(
         return data, target_tensor
 
     return processor
- 
+
 
 def interpolate_GHI(data):
     """Time-based linear interpolation for missing GHI values in the given dataframe."""
