@@ -70,7 +70,6 @@ def normalize_station_GHI(data, target_tensor):
 
 def normalize_CLEARSKY_GHI(data, target_tensor):
     # Quantile based normalization
-<<<<<<< HEAD
     median_CLEARSKY_GHI = 448.994217
     quantile_diff_CLEARSKY_GHI = 501.285528
     clearsky_tensor = tf.math.divide(tf.math.subtract(data['clearsky'], median_CLEARSKY_GHI), quantile_diff_CLEARSKY_GHI)
