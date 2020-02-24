@@ -79,8 +79,8 @@ def main(
         pd.Timedelta(d).to_pytimedelta() for d in admin_config["target_time_offsets"]
     ]
 
-    TRAIN_DT_LENGTH = len(training_datetimes)
-    VAL_DT_LENGTH = len(validation_datetimes)
+    TRAIN_DT_LENGTH = len(training_datetimes) * len(stations)
+    VAL_DT_LENGTH = len(validation_datetimes) * len(stations)
 
     STEPS_PER_EPOCH = int(TRAIN_DT_LENGTH) // user_config["batch_size"]
     VALIDATION_STEPS = int(VAL_DT_LENGTH) // user_config["batch_size"]
