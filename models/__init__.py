@@ -4,13 +4,16 @@ import tensorflow as tf
 from models.dummy import DummyModel
 from models.lrcn import LRCNModel
 from models.basecnn import BaseCNNModel
+from models.se_res_bilrcn import SE_Residual_BiLRCNModel
 from tensorflow.keras.optimizers import *
 import os
+from tensorflow.keras.metrics import *
 
 models = {
     "dummy": DummyModel,
     "lrcn": LRCNModel,
-    "basecnn": BaseCNNModel
+    "basecnn": BaseCNNModel,
+    "se_res_bilrcn": SE_Residual_BiLRCNModel,
 }
 
 
@@ -40,16 +43,29 @@ def prepare_model(
             )
         )
     else:
-        optimizer = Adam(lr=config['learning_rate'], decay=config['decay_rate'])
         model = models[config['model']].create(
             stations,
             target_time_offsets,
             config
         )
 
+        # Root Relative Squared Error
+        def rse(y_true, y_pred):
+            num = tf.math.sqrt(tf.math.reduce_sum(tf.math.square(y_true - y_pred)))
+            den = tf.math.sqrt(tf.math.reduce_sum(tf.math.square(y_pred - tf.math.reduce_mean(y_true, axis=None))))
+            return tf.math.reduce_mean(num / den)
+
+        # Empirical Correlation Coefficient
+        def CORR(y_true, y_pred):
+            num = tf.math.reduce_sum(tf.math.multiply((y_true - tf.reduce_mean(y_true, axis=0)), (y_pred - tf.reduce_mean(y_pred, axis=0))))
+            den = tf.math.reduce_sum(tf.math.multiply(tf.math.square(y_true - tf.reduce_mean(y_true, axis=0)), tf.math.square(y_pred - tf.reduce_mean(y_pred, axis=0))))
+            return tf.math.reduce_mean(num / den)
+
+        optimizer = Adadelta(lr=config['learning_rate'])
         model.compile(
             loss='mean_squared_error',
-            optimizer=optimizer
+            optimizer=optimizer,
+            metrics=['RootMeanSquaredError', rse, CORR],
         )
 
     return model
