@@ -23,6 +23,7 @@ class BiLRCNModel(BaseModel):
 
         initialiser = 'glorot_uniform'
         reg_lambda = 0.001
+        activation = 'relu'
 
         def img_model():
 
@@ -35,7 +36,7 @@ class BiLRCNModel(BaseModel):
                     )
                 )(model)
                 model = TimeDistributed(BatchNormalization())(model)
-                model = TimeDistributed(Activation('relu'))(model)
+                model = TimeDistributed(Activation(activation))(model)
                 # conv
                 model = TimeDistributed(
                     Conv2D(
@@ -44,7 +45,7 @@ class BiLRCNModel(BaseModel):
                     )
                 )(model)
                 model = TimeDistributed(BatchNormalization())(model)
-                model = TimeDistributed(Activation('relu'))(model)
+                model = TimeDistributed(Activation(activation))(model)
                 # max pool
                 model = TimeDistributed(MaxPooling2D((2, 2), strides=(2, 2)))(model)
                 model = TimeDistributed(Dropout(0.2))(model)
@@ -52,16 +53,18 @@ class BiLRCNModel(BaseModel):
 
             img_input_shape = (config['seq_len'], config['crop_size'], config['crop_size'], len(config['channels']))
             img_in = Input(shape=img_input_shape)
+            m = ZeroPadding3D(padding=(0, (80 - config['crop_size']) // 2, (80 - config['crop_size']) // 2), data_format=None)(img_in)
+            m = TimeDistributed(MaxPooling2D((2, 2), strides=(2, 2)))(m)
             m = TimeDistributed(
                 Conv2D(
                     32, (8, 8), padding='same',
                     kernel_initializer=initialiser,
                     kernel_regularizer=l2(reg_lambda)
                 )
-            )(img_in)
+            )(m)
 
             m = TimeDistributed(BatchNormalization())(m)
-            m = TimeDistributed(Activation('relu'))(m)
+            m = TimeDistributed(Activation(activation))(m)
             m = TimeDistributed(
                 Conv2D(
                     32, (3, 3), kernel_initializer=initialiser,
@@ -69,7 +72,7 @@ class BiLRCNModel(BaseModel):
                 )
             )(m)
             m = TimeDistributed(BatchNormalization())(m)
-            m = TimeDistributed(Activation('relu'))(m)
+            m = TimeDistributed(Activation(activation))(m)
             m = TimeDistributed(MaxPooling2D((2, 2), strides=(2, 2)))(m)
             m = TimeDistributed(Dropout(0.2))(m)
             # 2nd-5th (default) blocks
@@ -91,20 +94,23 @@ class BiLRCNModel(BaseModel):
                 m = Reshape((config['seq_len'], 1))(clearsky_in)
             else:
                 m = RepeatVector(config['seq_len'])(clearsky_in)
-            clearsky_out = Dense(512, activation='relu')(m)
+            clearsky_out = Dense(512, activation=activation)(m)
             return clearsky_in, clearsky_out
 
         img_in, img_out = img_model()
         clearsky_in, clearsky_out = clearsky_model()
 
-        m = Add()([img_out, clearsky_out])
+        m = Concatenate()([img_out, clearsky_out])
         m = TimeDistributed(BatchNormalization())(m)
         m = Bidirectional(LSTM(512, dropout=0.3, return_sequences=True))(m)
+        m = TimeDistributed(Dense(64))(m)
         m = TimeDistributed(BatchNormalization())(m)
-        m = TimeDistributed(Dense(64, activation='relu'))(m)
+        m = Activation(activation)(m)
         m = Bidirectional(LSTM(64, dropout=0.3, return_sequences=False))(m)
         m = BatchNormalization()(m)
-        m = Dense(64, activation='relu')(m)
+        m = Dense(64)(m)
+        m = BatchNormalization()(m)
+        m = Activation(activation)(m)
         m = Dense(len(target_time_offsets))(m)
         m = Dense(len(target_time_offsets))(m)
         o = Dense(len(target_time_offsets))(m)
