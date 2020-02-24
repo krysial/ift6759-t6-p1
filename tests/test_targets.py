@@ -33,7 +33,7 @@ def offsets():
 
 @pytest.fixture
 def config():
-    return {'target_name': 'GHI', 'target_past_len': 1}
+    return {'target_name': 'GHI', 'target_past_len': 1, 'target_past_interval': 15}
 
 
 # With offsets, target array should be of size [#datetimes, #offsets]
@@ -45,7 +45,7 @@ def test_shape_offsets(df, datetimes, station, offsets, config):
 # With sequence of images, target array should be of size [#datetimes, sequence length]
 def test_shape_sequence(df, datetimes, station):
     offsets = [timedelta()]
-    config = {'target_name': 'CLOUDINESS', 'target_past_len': 10}
+    config = {'target_name': 'CLOUDINESS', 'target_past_len': 10, 'target_past_interval': 30}
     targets = get_GHI_targets(df, datetimes, station, offsets, config)
     assert targets.shape == (len(datetimes), config['target_past_len'])
 

@@ -13,6 +13,7 @@ from utils import utils
 
 IMAGE_HEIGHT = 650
 IMAGE_WIDTH = 1500
+PRESAVED_IMAGE_DIMS = 80
 DT_FORMAT = '%Y-%m-%dT%H:%M:%S'
 GOES13_DS = {
     'hdf516': ['hdf5_16bit_path', 'hdf5_16bit_offset'],
@@ -30,7 +31,7 @@ def get_preprocessed_images(
 
     frames = fetch_preprocessed_frames(dataframe, datetimes, config)
 
-    assert frames.shape == (len(datetimes), seqs, len(channels), config['crop_size'], config['crop_size'])
+    assert frames.shape == (len(datetimes), seqs, len(channels), PRESAVED_IMAGE_DIMS, PRESAVED_IMAGE_DIMS)
     return frames
 
 
@@ -53,7 +54,7 @@ def get_raw_images(
 
     channels = config['channels']
     seqs = config['seq_len']
-    goes13_i_paths = get_frames_location(dataframe, datetimes, seqs, config['goes13_dataset'])
+    goes13_i_paths = get_frames_location(dataframe, datetimes, seqs, config['goes13_dataset'], config)
     frames = fetch_frames(datetimes, goes13_i_paths, channels, seqs)
 
     assert frames.shape == (len(datetimes), seqs, len(channels), IMAGE_HEIGHT, IMAGE_WIDTH)
@@ -68,10 +69,10 @@ def read_conf_file(path):
     return config
 
 
-def get_frames_location(dataframe, datetimes, seqs, dataset):
+def get_frames_location(dataframe, datetimes, seqs, dataset, config):
 
     columns = GOES13_DS[dataset] if dataset else GOES13_DS['hdf516']
-    offset = 15
+    offset = config['input_past_interval']
     dt_seqs = []
 
     for i, datetime in enumerate(datetimes):

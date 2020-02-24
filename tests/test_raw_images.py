@@ -12,7 +12,8 @@ app_config = {
     "goes13_dataset": 'hdf516',
     "target_datetimes": [
         "2015-02-18T12:45:00"
-    ]
+    ],
+    "input_past_interval": 15,
 }
 
 

@@ -64,7 +64,7 @@ def config():
         "target_name": "GHI",
         "model": "lrcn",
         "cache_data_path": "data/cache",
-        "stack_seqs": False
+        "input_past_interval": 15,
     }
 
 

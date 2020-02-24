@@ -25,7 +25,7 @@ def get_GHI_targets(
     """
     # Add past images (if any) as offsets
     for i in range(config['target_past_len'] - 1):
-        offsets.insert(0, timedelta(minutes=-(i + 1) * 15))
+        offsets.insert(0, timedelta(minutes=-(i + 1) * config['target_past_interval']))
 
     # Initialize target array
     targets = np.zeros((len(datetimes), len(offsets)))
