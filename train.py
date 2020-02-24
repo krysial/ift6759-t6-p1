@@ -7,6 +7,7 @@ import pandas as pd
 import time
 import tensorflow as tf
 import numpy as np
+import functools
 
 from tensorflow.keras.callbacks import TensorBoard,\
     ModelCheckpoint, \
@@ -58,11 +59,8 @@ def main(
         training_dataframe = \
             training_dataframe[training_dataframe.index < datetime.datetime.fromisoformat(
                 user_config["train_end_bound"])]
-    # filtering training entries that have nan as path
     training_dataframe = training_dataframe[training_dataframe.hdf5_16bit_path != 'nan']
-    training_dataframe = training_dataframe[training_dataframe.BND_DAYTIME == 1]
     training_datetimes = training_dataframe.index.to_list()
-    np.random.shuffle(training_datetimes)
 
     # val_dataframe
     val_dataframe = catalog_dataframe.copy()
@@ -76,7 +74,6 @@ def main(
                 user_config["val_end_bound"])]
     # filtering val entries that have nan as path
     val_dataframe = val_dataframe[val_dataframe.hdf5_16bit_path != 'nan']
-    val_dataframe = val_dataframe[val_dataframe.BND_DAYTIME == 1]
     validation_datetimes = val_dataframe.index.to_list()
 
     # Interpolate missing GHI values
@@ -87,11 +84,17 @@ def main(
     target_time_offsets = [pd.Timedelta(d).to_pytimedelta(
     ) for d in admin_config["target_time_offsets"]]
 
-    # TODO URGENTLY!!! make sure we train on all stations
-    stations = {"BND": target_stations["BND"]}
+    TRAIN_DT_LENGTH = functools.reduce(
+        lambda agr, s: training_dataframe['{}_DAYTIME'.format(s)].sum() + agr,
+        target_stations,
+        0
+    )
 
-    TRAIN_DT_LENGTH = len(training_datetimes)
-    VAL_DT_LENGTH = len(validation_datetimes)
+    VAL_DT_LENGTH = functools.reduce(
+        lambda agr, s: val_dataframe['{}_DAYTIME'.format(s)].sum() + agr,
+        target_stations,
+        0
+    )
 
     STEPS_PER_EPOCH = int(TRAIN_DT_LENGTH) // user_config["batch_size"]
     VALIDATION_STEPS = int(VAL_DT_LENGTH) // user_config["batch_size"]
@@ -106,7 +109,7 @@ def main(
     train_data_loader = prepare_dataloader(
         training_dataframe,
         training_datetimes,
-        stations,
+        target_stations,
         target_time_offsets,
         user_config
     ).prefetch(tf.data.experimental.AUTOTUNE)
@@ -114,7 +117,7 @@ def main(
     val_data_loader = prepare_dataloader(
         val_dataframe,
         validation_datetimes,
-        stations,
+        target_stations,
         target_time_offsets,
         user_config
     ).prefetch(tf.data.experimental.AUTOTUNE)
@@ -153,7 +156,7 @@ def main(
     )
 
     model = prepare_model(
-        stations,
+        target_stations,
         target_time_offsets,
         user_config
     )

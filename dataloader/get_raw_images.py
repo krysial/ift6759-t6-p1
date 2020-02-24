@@ -24,15 +24,14 @@ GOES13_DS = {
 def get_preprocessed_images(
         dataframe: pd.DataFrame,
         datetimes: typing.List[dt.datetime],
-        config: typing.Dict[typing.AnyStr, typing.Any],
-        station: typing.Dict[typing.AnyStr, typing.Tuple[float, float, float]],) -> np.ndarray:
+        config: typing.Dict[typing.AnyStr, typing.Any]) -> np.ndarray:
 
     channels = config['channels']
     seqs = config['seq_len']
-    goes13_i_paths = get_frames_location(dataframe, datetimes, seqs, config['goes13_dataset'], config)
-    frames = fetch_preprocessed_frames(goes13_i_paths, channels, seqs, config, station)
 
-    assert frames.shape == (len(datetimes), seqs, len(channels), PRESAVED_IMAGE_DIMS, PRESAVED_IMAGE_DIMS)
+    frames = fetch_preprocessed_frames(dataframe, datetimes, config)
+
+    assert frames.shape == (len(datetimes), seqs, len(channels), config['crop_size'], config['crop_size'])
     return frames
 
 
@@ -91,51 +90,49 @@ def get_frames_location(dataframe, datetimes, seqs, dataset, config):
     return df.dropna()
 
 
-def fetch_preprocessed_frames(frames_df, channels, seqs, config, station):
+def fetch_preprocessed_frames(dateframe, frames_df, config):
+    dataset = config['goes13_dataset']
+    path_offset_columns = GOES13_DS[dataset] if dataset else GOES13_DS['hdf516']
+
     output = np.zeros((
-        1,
-        seqs,
-        len(channels),
-        PRESAVED_IMAGE_DIMS,
-        PRESAVED_IMAGE_DIMS
+        config['batch_size'],
+        config['seq_len'],
+        len(config['channels']),
+        config['crop_size'],
+        config['crop_size']
     ))
-    paths_groups = frames_df.groupby('path', sort=False)
 
-    station_to_id = {
-        "BND": 0,
-        "TBL": 1,
-        "DRA": 2,
-        "FPK": 3,
-        "GWN": 4,
-        "PSU": 5,
-        "SXF": 6
-    }
+    cache = {}
+    for batch, (start_datetime, station_id) in enumerate(frames_df):
+        times = pd.date_range(
+            start=start_datetime,
+            periods=config['seq_len'],
+            freq='{}Min'.format(config['input_past_interval']),
+            tz='utc'
+        )
 
-    for name, group in paths_groups:
-        filename = os.path.basename(os.path.normpath(name))
-        fullpath = config['cache_data_path'] + str(PRESAVED_IMAGE_DIMS) + '/' + filename
+        paths_groups = dateframe[dateframe.index.isin(times)].groupby(path_offset_columns, sort=False)
 
-        if os.path.exists(fullpath):
-            fp = np.memmap(
-                fullpath,
-                dtype='float32',
-                mode='r',
-                shape=(
-                    len(config['channels']),
-                    96,
-                    len(station_to_id),
-                    PRESAVED_IMAGE_DIMS,
-                    PRESAVED_IMAGE_DIMS
+        for seq, ((path, offset), group) in enumerate(paths_groups):
+            filename = os.path.basename(os.path.normpath(path))
+            fullpath = config['cache_data_path'] + str(config['crop_size']) + '/' + filename
+
+            if os.path.exists(fullpath) and filename not in cache:
+                cache[filename] = np.memmap(
+                    fullpath,
+                    dtype='float32',
+                    mode='r',
+                    shape=(
+                        len(config['channels']),
+                        96,
+                        7,  # hardcoded number of stations
+                        config['crop_size'],
+                        config['crop_size']
+                    )
                 )
-            )
 
-            for index, row in group.iterrows():
-                position = row['position']
-                frame = row['offset']
-
-                output[position[0], position[1]] = \
-                    fp[:, position[0],
-                        station_to_id[next(iter(station))], :, :]
+            if filename in cache:
+                output[batch, seq] = cache[filename][:, offset, station_id]
 
     return output
 

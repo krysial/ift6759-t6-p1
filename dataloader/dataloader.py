@@ -51,11 +51,14 @@ def prepare_dataloader(
         }, tf.float32)
     )
 
-    data_loader = data_loader.batch(config['batch_size']).repeat()
+    # Ankur not sure abou the below. Repeat is a hack, we need to see what's wrong
+
     data_loader = data_loader.map(transposing, num_parallel_calls=tf.data.experimental.AUTOTUNE)
-    if config['crop_size'] != 80:
-        cropper = presaved_crop(config=config)
-        data_loader = data_loader.map(cropper, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+    data_loader = data_loader.repeat()
+    # if config['crop_size'] != 80:
+    #     cropper = presaved_crop(config=config)
+    #     data_loader = data_loader.map(cropper, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+
     data_loader = data_loader.map(normalize_station_GHI, num_parallel_calls=tf.data.experimental.AUTOTUNE)
     data_loader = data_loader.map(normalize_CLEARSKY_GHI, num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
