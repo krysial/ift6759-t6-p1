@@ -34,7 +34,7 @@ def get_GHI_targets(
     station = list(station)[0]
 
     # Iterate over datetimes
-    for i, dt in enumerate(datetimes):
+    for i, (dt, station_id) in enumerate(datetimes):
         # Iterate over offsets
         for j, offset in enumerate(offsets):
             # Get target time with offset

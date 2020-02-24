@@ -51,7 +51,5 @@ def prepare_dataloader(
         }, tf.float32)
     )
 
-    data_loader = data_loader.batch(config['batch_size'])
-
     # Final step of data loading pipeline: Return the dataset loading object
     return data_loader

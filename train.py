@@ -57,11 +57,8 @@ def main(
         training_dataframe = \
             training_dataframe[training_dataframe.index < datetime.datetime.fromisoformat(
                 user_config["train_end_bound"])]
-    # filtering training entries that have nan as path
     training_dataframe = training_dataframe[training_dataframe.hdf5_16bit_path != 'nan']
-    training_dataframe = training_dataframe[training_dataframe.BND_DAYTIME == 1]
     training_datetimes = training_dataframe.index.to_list()
-    np.random.shuffle(training_datetimes)
 
     # val_dataframe
     val_dataframe = catalog_dataframe.copy()
@@ -75,15 +72,12 @@ def main(
                 user_config["val_end_bound"])]
     # filtering val entries that have nan as path
     val_dataframe = val_dataframe[val_dataframe.hdf5_16bit_path != 'nan']
-    val_dataframe = val_dataframe[val_dataframe.BND_DAYTIME == 1]
     validation_datetimes = val_dataframe.index.to_list()
 
-    target_stations = admin_config["stations"]
-    target_time_offsets = [pd.Timedelta(d).to_pytimedelta(
-    ) for d in admin_config["target_time_offsets"]]
-
-    # TODO URGENTLY!!! make sure we train on all stations
-    stations = {"BND": target_stations["BND"]}
+    stations = admin_config["stations"]
+    target_time_offsets = [
+        pd.Timedelta(d).to_pytimedelta() for d in admin_config["target_time_offsets"]
+    ]
 
     TRAIN_DT_LENGTH = len(training_datetimes)
     VAL_DT_LENGTH = len(validation_datetimes)

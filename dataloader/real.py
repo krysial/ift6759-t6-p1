@@ -3,6 +3,8 @@ import typing
 import datetime
 import numpy as np
 
+import itertools
+
 from dataloader.get_GHI_targets import get_GHI_targets
 from dataloader.get_raw_images import get_raw_images
 from dataloader.get_raw_images import get_preprocessed_images
@@ -32,31 +34,40 @@ def create_data_generator(
         if DEBUGGING:
             pydevd.settrace(suspend=False)
 
-        for i, datetime in enumerate(target_datetimes):
-            targets = get_GHI_targets(
-                dataframe,
-                [datetime],
-                station,
-                target_time_offsets,
-                config
-            )
+        # Order important to minimize file opening
+        zip_target = zip(
+            [final_dt for dt in target_datetimes for final_dt in (dt,) * len(station)],
+            itertools.cycle(list(range(len(station))))  # Cycle through stations for each timedate
+        )
+        zip_len = len(target_datetimes) * len(station)
+
+        for i in range(0, zip_len, config['batch_size']):
+            datetimes_batch = list(itertools.islice(zip_target, i, i + config['batch_size']))
+
             images = get_preprocessed_images(
                 dataframe,
-                [datetime],
-                config,
-                station
+                datetimes_batch,
+                config
             )
             clearsky = get_column_from_dataframe(
                 dataframe,
-                [datetime],
+                datetimes_batch,
                 station,
                 target_time_offsets,
                 'CLEARSKY_GHI',
                 config
             )
+            targets = get_GHI_targets(
+                dataframe,
+                datetimes_batch,
+                station,
+                target_time_offsets,
+                config
+            )
+
             yield {
-                'images': np.transpose(images[0], [0, 2, 3, 1]),
-                'clearsky': clearsky[0],
-            }, targets[0]
+                'images': np.transpose(images, [0, 1, 3, 4, 2]),
+                'clearsky': clearsky,
+            }, targets
 
     return create_generator
