@@ -146,7 +146,7 @@ def main(
     )
 
     model = prepare_model(
-        stations,
+        target_stations,
         target_time_offsets,
         user_config
     )
