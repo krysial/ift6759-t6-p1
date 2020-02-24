@@ -99,7 +99,7 @@ def main(
     train_data_loader = prepare_dataloader(
         training_dataframe,
         training_datetimes,
-        stations,
+        target_stations,
         target_time_offsets,
         user_config
     ).prefetch(tf.data.experimental.AUTOTUNE)
@@ -107,7 +107,7 @@ def main(
     val_data_loader = prepare_dataloader(
         val_dataframe,
         validation_datetimes,
-        stations,
+        target_stations,
         target_time_offsets,
         user_config
     ).prefetch(tf.data.experimental.AUTOTUNE)
