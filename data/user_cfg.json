@@ -12,7 +12,7 @@
     "seq_len": 6,
     "target_past_len": 1,
     "target_name": "GHI",
-    "model": "lrcn",
+    "model": "cnn3d",
     "real": true,
     "checkpoint_path": "/project/cq-training-1/project1/teams/team06/checkpoints",
     "model_id": null,
