@@ -17,7 +17,7 @@ from models import models
 import dataloader.dataloader as real_prepare_dataloader
 import dataloader.synthetic_dataloader as synthetic_dataloader
 from models import prepare_model
-from dataloader.dataset_processing import dataset_concat_seq_images, interpolate_GHI
+from dataloader.dataset_processing import interpolate_GHI
 
 np.random.seed(12345)
 tf.random.set_seed(12345)
