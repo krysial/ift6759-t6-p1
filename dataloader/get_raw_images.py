@@ -107,7 +107,7 @@ def fetch_preprocessed_frames(dateframe, frames_df, config):
         times = pd.date_range(
             start=start_datetime,
             periods=config['seq_len'],
-            freq='15Min',
+            freq='{}Min'.format(config['input_past_interval']),
             tz='utc'
         )
 
