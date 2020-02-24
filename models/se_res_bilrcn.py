@@ -72,7 +72,9 @@ class SE_Residual_BiLRCNModel(BaseModel):
 
             img_input_shape = (config['seq_len'], config['crop_size'], config['crop_size'], len(config['channels']))
             img_in = Input(shape=img_input_shape)
-            m = squeeze_excite_residual_block(img_in, 64, kernel=(7, 7), init=initialiser, reg_lambda=reg_lambda)
+            m = ZeroPadding3D(padding=(0, (80 - config['crop_size']) // 2, (80 - config['crop_size']) // 2), data_format=None)(img_in)
+            m = TimeDistributed(MaxPooling2D((2, 2), strides=(2, 2)))(m)
+            m = squeeze_excite_residual_block(m, 64, kernel=(7, 7), init=initialiser, reg_lambda=reg_lambda)
             m = squeeze_excite_residual_block(m, 64, kernel=(5, 5), init=initialiser, reg_lambda=reg_lambda)
             m = squeeze_excite_residual_block(m, 128, kernel=(3, 3), init=initialiser, reg_lambda=reg_lambda)
             m = TimeDistributed(Flatten())(m)
