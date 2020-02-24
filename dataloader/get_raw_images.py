@@ -130,7 +130,8 @@ def fetch_preprocessed_frames(dateframe, frames_df, config):
                     )
                 )
 
-            output[batch, seq] = cache[filename][:, offset, station_id]
+            if filename in cache:
+                output[batch, seq] = cache[filename][:, offset, station_id]
 
     return output
 

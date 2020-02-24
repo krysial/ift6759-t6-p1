@@ -17,7 +17,7 @@ def df():
 @pytest.fixture
 def datetimes():
     datetimes = ["2015-01-01T12:45:00", "2015-12-31T22:00:00"]
-    return [datetime.strptime(x, '%Y-%m-%dT%H:%M:%S') for x in datetimes]
+    return [(datetime.strptime(x, '%Y-%m-%dT%H:%M:%S'), 0) for x in datetimes]
 
 
 @pytest.fixture
