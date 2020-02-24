@@ -4,6 +4,7 @@ import tensorflow as tf
 from models.dummy import DummyModel
 from models.lrcn import LRCNModel
 from models.basecnn import BaseCNNModel
+from models.convlstm import ConvLSTMModel
 from models.conv3d import Conv3DModel
 from models.se_res_bilrcn import SE_Residual_BiLRCNModel
 from tensorflow.keras.optimizers import *
@@ -14,6 +15,7 @@ models = {
     "dummy": DummyModel,
     "lrcn": LRCNModel,
     "basecnn": BaseCNNModel,
+    "convlstm": ConvLSTMModel,
     "cnn3d": Conv3DModel,
     "se_res_bilrcn": SE_Residual_BiLRCNModel,
 }
