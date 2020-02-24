@@ -41,6 +41,13 @@ def dataset_processing(
     return processor
 
 
+def interpolate_GHI(data):
+    """Time-based linear interpolation for missing GHI values in the given dataframe."""
+    for station in ['BND', 'TBL', 'DRA', 'FPK', 'GWN', 'PSU', 'SXF']:
+        data[f'{station}_GHI'].interpolate(method='time', inplace=True)
+    return data
+
+
 def transposing(data, target_tensor):
     # (batch, seq, ch, dim, dim) -> (batch, seq, dim, dim, ch)
     data['images'] = tf.transpose(data['images'], [0, 1, 3, 4, 2])
