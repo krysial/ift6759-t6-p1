@@ -37,20 +37,20 @@ def create_data_generator(
         def batch_datetimes():
             filtered_df = []
             for index, row in dataframe.iterrows():
-                if row['BND_DAYTIME'] == 1:
-                    filtered_df.append((index, 0))
-                if row['TBL_DAYTIME'] == 1:
-                    filtered_df.append((index, 1))
-                if row['DRA_DAYTIME'] == 1:
-                    filtered_df.append((index, 2))
-                if row['FPK_DAYTIME'] == 1:
-                    filtered_df.append((index, 3))
-                if row['GWN_DAYTIME'] == 1:
-                    filtered_df.append((index, 4))
-                if row['PSU_DAYTIME'] == 1:
-                    filtered_df.append((index, 5))
-                if row['SXF_DAYTIME'] == 1:
-                    filtered_df.append((index, 6))
+                if row['BND_DAYTIME'] == 1 and 'BND' in station:
+                    filtered_df.append((index, [*station].index('BND')))
+                if row['TBL_DAYTIME'] == 1 and 'TBL' in station:
+                    filtered_df.append((index, [*station].index('TBL')))
+                if row['DRA_DAYTIME'] == 1 and 'DRA' in station:
+                    filtered_df.append((index, [*station].index('DRA')))
+                if row['FPK_DAYTIME'] == 1 and 'FPK' in station:
+                    filtered_df.append((index, [*station].index('FPK')))
+                if row['GWN_DAYTIME'] == 1 and 'GWN' in station:
+                    filtered_df.append((index, [*station].index('GWN')))
+                if row['PSU_DAYTIME'] == 1 and 'PSU' in station:
+                    filtered_df.append((index, [*station].index('PSU')))
+                if row['SXF_DAYTIME'] == 1 and 'SXF' in station:
+                    filtered_df.append((index, [*station].index('SXF')))
 
                 if len(filtered_df) > config['batch_size']:
                     batch = filtered_df[:config['batch_size']]
