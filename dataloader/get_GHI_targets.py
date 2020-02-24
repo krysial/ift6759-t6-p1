@@ -30,7 +30,6 @@ def get_GHI_targets(
     # Initialize target array
     targets = np.zeros((len(datetimes), len(offsets)))
 
-
     # Iterate over datetimes
     for i, (dt, station_id) in enumerate(datetimes):
         # Get station name as string
