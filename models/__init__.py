@@ -1,6 +1,7 @@
 import typing
 import datetime
 import tensorflow as tf
+import numpy as np
 from models.dummy import DummyModel
 from models.lrcn import LRCNModel
 from models.basecnn import BaseCNNModel
@@ -8,9 +9,12 @@ from models.convlstm import ConvLSTMModel
 from models.conv3d import Conv3DModel
 from models.se_res_bilrcn import SE_Residual_BiLRCNModel
 from models.bilrcn import BiLRCNModel
+from utils.rescale_GHI import rescale_GHI
 from tensorflow.keras.optimizers import *
 import os
 from tensorflow.keras.metrics import *
+from tensorflow.keras.losses import *
+
 
 models = {
     "dummy": DummyModel,
@@ -55,6 +59,15 @@ def prepare_model(
             config
         )
 
+        def scaled_rmse(y_true, y_pred):
+
+            y_true_ = (y_true * 470.059048) + 297.487143
+            y_pred_ = (y_pred * 470.059048) + 297.487143
+
+            mse = tf.math.reduce_mean(tf.math.square(y_true_ - y_pred_))
+            rmse_loss = tf.math.sqrt(mse)
+            return rmse_loss
+
         # Root Relative Squared Error
         def rse(y_true, y_pred):
             num = tf.math.sqrt(tf.math.reduce_sum(tf.math.square(y_true - y_pred)))
@@ -71,7 +84,7 @@ def prepare_model(
         model.compile(
             loss='mean_squared_error',
             optimizer=optimizer,
-            metrics=['RootMeanSquaredError', rse, CORR],
+            metrics=[scaled_rmse],
         )
 
     return model

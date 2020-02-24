@@ -15,11 +15,11 @@ if [ "${#end_indices[@]}" -gt "$(($SLURM_ARRAY_TASK_ID))" ]
 then
     echo "start ${start_indices[$SLURM_ARRAY_TASK_ID]}"
     echo "start ${end_indices[$SLURM_ARRAY_TASK_ID]}"
-    python preprocessing.py -u --start-index=${start_indices[$SLURM_ARRAY_TASK_ID]} --end-index=${end_indices[$SLURM_ARRAY_TASK_ID]}
+    python -u preprocessing.py --start-index=${start_indices[$SLURM_ARRAY_TASK_ID]} --end-index=${end_indices[$SLURM_ARRAY_TASK_ID]} --crop-size=40
 elif [ "${#end_indices[@]}" -eq "$(($SLURM_ARRAY_TASK_ID))" ]
 then
     echo "start ${start_indices[$SLURM_ARRAY_TASK_ID]}"
-    python preprocessing.py -u --start-index=${start_indices[$SLURM_ARRAY_TASK_ID]}
+    python -u preprocessing.py --start-index=${start_indices[$SLURM_ARRAY_TASK_ID]} --crop-size=40
 else
     echo "OUT OF BOUNDS"
 fi

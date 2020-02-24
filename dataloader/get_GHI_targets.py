@@ -30,11 +30,11 @@ def get_GHI_targets(
     # Initialize target array
     targets = np.zeros((len(datetimes), len(offsets)))
 
-    # Get station name as string
-    station = list(station)[0]
-
     # Iterate over datetimes
-    for i, dt in enumerate(datetimes):
+    for i, (dt, station_id) in enumerate(datetimes):
+        # Get station name as string
+        station_name = list(station)[station_id]
+
         # Iterate over offsets
         for j, offset in enumerate(offsets):
             # Get target time with offset
@@ -42,7 +42,7 @@ def get_GHI_targets(
             # Get target value at time "t"
             # If target value is an invalid type or does not exist, pass
             try:
-                ghi = df.loc[t][f"{station}_{config['target_name']}"]
+                ghi = df.loc[t][f"{station_name}_{config['target_name']}"]
             except (KeyError):
                 pass
             else:
