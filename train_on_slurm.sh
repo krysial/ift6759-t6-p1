@@ -2,11 +2,7 @@
 #SBATCH --time=12:00:00
 #SBATCH --gres=gpu:k80:1
 #SBATCH --cpus-per-task=1
-<<<<<<< HEAD
 #SBATCH --mem=3500M
-=======
-#SBATCH --mem=5G
->>>>>>> convlstm model added
 #SBATCH -o ./results/slurm-%A_%a.out # STDOUT
 
 module load imkl/2018.3.222
