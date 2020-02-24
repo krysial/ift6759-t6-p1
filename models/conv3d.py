@@ -25,22 +25,25 @@ class Conv3DModel(BaseModel):
         self = cls()
 
         def convblock1(model, filters, kernel, activation, conv_stride, padding, pool_size, pool_stride, drop_prob):
-            model = Conv3D(filters, kernel, activation=activation, strides=conv_stride, padding=padding)(model)
+            model = Conv3D(filters, kernel, strides=conv_stride, padding=padding)(model)
             model = TimeDistributed(BatchNormalization())(model)
+            model = Activation(activation)(model)
             model = MaxPooling3D(pool_size=pool_size, strides=pool_stride)(model)
             model = TimeDistributed(Dropout(drop_prob))(model)
             return model
 
         def convblock2(model, filters, kernel, activation, conv_stride, padding, pool_size, pool_stride, drop_prob):
-            model = Conv3D(filters, kernel, activation=activation, strides=conv_stride, padding=padding)(model)
+            model = Conv3D(filters, kernel, strides=conv_stride, padding=padding)(model)
             model = TimeDistributed(BatchNormalization())(model)
+            model = Activation(activation)(model)
             model = convblock1(model, filters, kernel, activation, conv_stride, padding, pool_size, pool_stride, drop_prob)
             return model
 
         def denseblock(model, drop_prob, units, activation):
+            model = Dense(units)(model)
             model = BatchNormalization()(model)
+            model = Activation(activation)(model)
             model = Dropout(drop_prob)(model)
-            model = Dense(units, activation=activation)(model)
             return model
 
         def img_model():
@@ -48,9 +51,8 @@ class Conv3DModel(BaseModel):
             img_in = Input(shape=img_input_shape)
             m = ZeroPadding3D(padding=(0, (80 - config['crop_size']) // 2, (80 - config['crop_size']) // 2), data_format=None)(img_in)
             m = TimeDistributed(MaxPooling2D((2, 2), strides=(2, 2)))(m)
-            m = TimeDistributed(BatchNormalization())(img_in)
             m = convblock2(
-                model=m,
+                model=img_in,
                 filters=64,
                 kernel=(5, 5, 5),
                 activation='relu',
@@ -138,12 +140,7 @@ class Conv3DModel(BaseModel):
             units=4,
             activation='linear',
         )
-        o = denseblock(
-            model=m,
-            drop_prob=0.3,
-            units=len(target_time_offsets),
-            activation='linear',
-        )
+        o = Dense(4)(m)
 
         self.model = Model([img_in, clearsky_in], o)
         return self
