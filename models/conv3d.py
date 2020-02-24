@@ -46,6 +46,8 @@ class Conv3DModel(BaseModel):
         def img_model():
             img_input_shape = (config['seq_len'], config['crop_size'], config['crop_size'], len(config['channels']))
             img_in = Input(shape=img_input_shape)
+            m = ZeroPadding3D(padding=(0, (80 - config['crop_size']) // 2, (80 - config['crop_size']) // 2), data_format=None)(img_in)
+            m = TimeDistributed(MaxPooling2D((2, 2), strides=(2, 2)))(m)
             m = TimeDistributed(BatchNormalization())(img_in)
             m = convblock2(
                 model=m,
