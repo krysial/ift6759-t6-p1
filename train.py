@@ -17,7 +17,7 @@ from models import models
 import dataloader.dataloader as real_prepare_dataloader
 import dataloader.synthetic_dataloader as synthetic_dataloader
 from models import prepare_model
-from dataloader.dataset_processing import dataset_concat_seq_images, interpolate_GHI
+from dataloader.dataset_processing import interpolate_GHI
 
 np.random.seed(12345)
 tf.random.set_seed(12345)
@@ -83,8 +83,8 @@ def main(
     target_time_offsets = [pd.Timedelta(d).to_pytimedelta(
     ) for d in admin_config["target_time_offsets"]]
 
-    TRAIN_DT_LENGTH = len(training_datetimes) * len(stations)
-    VAL_DT_LENGTH = len(validation_datetimes) * len(stations)
+    TRAIN_DT_LENGTH = len(training_datetimes) * len(target_stations)
+    VAL_DT_LENGTH = len(validation_datetimes) * len(target_stations)
 
     STEPS_PER_EPOCH = int(TRAIN_DT_LENGTH) // user_config["batch_size"]
     VALIDATION_STEPS = int(VAL_DT_LENGTH) // user_config["batch_size"]
