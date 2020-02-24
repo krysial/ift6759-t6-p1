@@ -34,24 +34,38 @@ def create_data_generator(
         if DEBUGGING:
             pydevd.settrace(suspend=False)
 
-        # Order important to minimize file opening
-        zip_target = zip(
-            [final_dt for dt in target_datetimes for final_dt in (dt,) * len(station)],
-            itertools.cycle(list(range(len(station))))  # Cycle through stations for each timedate
-        )
-        zip_len = len(target_datetimes) * len(station)
+        def batch_datetimes():
+            filtered_df = []
+            for index, row in dataframe.iterrows():
+                if row['BND_DAYTIME'] == 1:
+                    filtered_df.append((index, 0))
+                if row['TBL_DAYTIME'] == 1:
+                    filtered_df.append((index, 1))
+                if row['DRA_DAYTIME'] == 1:
+                    filtered_df.append((index, 2))
+                if row['FPK_DAYTIME'] == 1:
+                    filtered_df.append((index, 3))
+                if row['GWN_DAYTIME'] == 1:
+                    filtered_df.append((index, 4))
+                if row['PSU_DAYTIME'] == 1:
+                    filtered_df.append((index, 5))
+                if row['SXF_DAYTIME'] == 1:
+                    filtered_df.append((index, 6))
 
-        for i in range(0, zip_len, config['batch_size']):
-            datetimes_batch = list(itertools.islice(zip_target, i, i + config['batch_size']))
+                if len(filtered_df) > config['batch_size']:
+                    batch = filtered_df[:config['batch_size']]
+                    filtered_df[config['batch_size']:]
+                    yield batch
 
+        for batch in batch_datetimes():
             images = get_preprocessed_images(
                 dataframe,
-                datetimes_batch,
+                batch,
                 config
             )
             clearsky = get_column_from_dataframe(
                 dataframe,
-                datetimes_batch,
+                batch,
                 station,
                 target_time_offsets,
                 'CLEARSKY_GHI',
@@ -59,7 +73,7 @@ def create_data_generator(
             )
             targets = get_GHI_targets(
                 dataframe,
-                datetimes_batch,
+                batch,
                 station,
                 target_time_offsets,
                 config

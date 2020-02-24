@@ -7,6 +7,7 @@ import pandas as pd
 import time
 import tensorflow as tf
 import numpy as np
+import functools
 
 from tensorflow.keras.callbacks import TensorBoard,\
     ModelCheckpoint, \
@@ -83,8 +84,17 @@ def main(
     target_time_offsets = [pd.Timedelta(d).to_pytimedelta(
     ) for d in admin_config["target_time_offsets"]]
 
-    TRAIN_DT_LENGTH = len(training_datetimes) * len(target_stations)
-    VAL_DT_LENGTH = len(validation_datetimes) * len(target_stations)
+    TRAIN_DT_LENGTH = functools.reduce(
+        lambda agr, s: training_dataframe['{}_DAYTIME'.format(s)].sum() + agr,
+        target_stations,
+        0
+    )
+
+    VAL_DT_LENGTH = functools.reduce(
+        lambda agr, s: val_dataframe['{}_DAYTIME'.format(s)].sum() + agr,
+        target_stations,
+        0
+    )
 
     STEPS_PER_EPOCH = int(TRAIN_DT_LENGTH) // user_config["batch_size"]
     VALIDATION_STEPS = int(VAL_DT_LENGTH) // user_config["batch_size"]
