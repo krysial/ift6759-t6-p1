@@ -31,7 +31,7 @@ def get_preprocessed_images(
 
     frames = fetch_preprocessed_frames(dataframe, datetimes, config)
 
-    assert frames.shape == (len(datetimes), seqs, len(channels), PRESAVED_IMAGE_DIMS, PRESAVED_IMAGE_DIMS)
+    assert frames.shape == (len(datetimes), seqs, len(channels), config['crop_size'], config['crop_size'])
     return frames
 
 
