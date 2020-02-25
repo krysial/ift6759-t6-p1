@@ -167,7 +167,7 @@ def main(
         use_multiprocessing=True,
         workers=32,
         callbacks=[tb, csv_logger],
-        steps_per_epoch=STEPS_PER_EPOCH,
+        steps_per_epoch=STEPS_PER_EPOCH // 16,
         validation_steps=VALIDATION_STEPS,
         validation_data=val_data_loader
     )
