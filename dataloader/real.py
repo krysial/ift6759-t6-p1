@@ -36,7 +36,7 @@ def create_data_generator(
 
         def batch_datetimes():
             filtered_df = []
-            while len(filtered_df) < config['batch_size']:
+            while True:
                 sample = dataframe.sample()
                 index = sample.index[0]
                 row = sample.iloc[0]
