@@ -273,4 +273,4 @@ def test_dataloader_real_clearsky_ghi_size_check(dataframe, target_datetimes,
     for data, tgt in dl:
         break
     assert data['clearsky'].shape[0] == config_real["batch_size"]
-    assert data['clearsky'].shape[1] == config_real["seq_len"]
+    assert data['clearsky'].shape[1] == len(target_time_offsets)
