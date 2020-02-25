@@ -36,7 +36,11 @@ def create_data_generator(
 
         def batch_datetimes():
             filtered_df = []
-            for index, row in dataframe.iterrows():
+            while True:
+                sample = dataframe.sample()
+                index = sample.index[0]
+                row = sample.iloc[0]
+
                 if row['BND_DAYTIME'] == 1 and 'BND' in station:
                     filtered_df.append((index, [*station].index('BND')))
                 if row['TBL_DAYTIME'] == 1 and 'TBL' in station:
