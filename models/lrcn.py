@@ -5,7 +5,7 @@ import tensorflow as tf
 
 from utils.time_distributed import TimeDistributed
 
-from tensorflow.keras.layers import Dense, Flatten, Dropout, ZeroPadding3D
+from tensorflow.keras.layers import Dense, Flatten, Dropout, ZeroPadding3D, Add
 from tensorflow.keras.layers import LSTM
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.optimizers import Adam, RMSprop
@@ -31,8 +31,8 @@ class LRCNModel(BaseModel):
         initialiser = 'glorot_uniform'
         reg_lambda = 0.001
 
-        self.conv2DPipe = Sequential()
-        self.conv2DPipe.add(
+        self.sequence = Sequential()
+        self.sequence.add(
             TimeDistributed(
                 Conv2D(
                     32, (8, 8), padding='same',
@@ -42,9 +42,9 @@ class LRCNModel(BaseModel):
                 input_shape=(config['seq_len'], config['crop_size'], config['crop_size'], len(config['channels']))
             )
         )
-        self.conv2DPipe.add(TimeDistributed(BatchNormalization()))
-        self.conv2DPipe.add(TimeDistributed(Activation('relu')))
-        self.conv2DPipe.add(
+        self.sequence.add(TimeDistributed(BatchNormalization()))
+        self.sequence.add(TimeDistributed(Activation('relu')))
+        self.sequence.add(
             TimeDistributed(
                 Conv2D(
                     32, (3, 3), kernel_initializer=initialiser,
@@ -52,31 +52,33 @@ class LRCNModel(BaseModel):
                 )
             )
         )
-        self.conv2DPipe.add(TimeDistributed(BatchNormalization()))
-        self.conv2DPipe.add(TimeDistributed(Activation('relu')))
-        self.conv2DPipe.add(
+        self.sequence.add(TimeDistributed(BatchNormalization()))
+        self.sequence.add(TimeDistributed(Activation('relu')))
+        self.sequence.add(
             TimeDistributed(
                 MaxPooling2D((2, 2), strides=(2, 2))
             )
         )
 
         # 2nd-5th (default) blocks
-        self.conv2DPipe = self.add_default_block(self.conv2DPipe, 32, init=initialiser, reg_lambda=reg_lambda)
-        self.conv2DPipe = self.add_default_block(self.conv2DPipe, 128, init=initialiser, reg_lambda=reg_lambda)
-        self.conv2DPipe = self.add_default_block(self.conv2DPipe, 256, init=initialiser, reg_lambda=reg_lambda)
-        self.conv2DPipe = self.add_default_block(self.conv2DPipe, 512, init=initialiser, reg_lambda=reg_lambda)
+        self.sequence = self.add_default_block(self.sequence, 32, init=initialiser, reg_lambda=reg_lambda)
+        self.sequence = self.add_default_block(self.sequence, 128, init=initialiser, reg_lambda=reg_lambda)
+        # self.sequence = self.add_default_block(self.sequence, 256, init=initialiser, reg_lambda=reg_lambda)
+        # self.sequence = self.add_default_block(self.sequence, 512, init=initialiser, reg_lambda=reg_lambda)
 
         # LSTM output head
-        self.conv2DPipe.add(TimeDistributed(Flatten()))
-        self.extraFeatures = Sequential()
-        self.extraFeatures.add(RepeatVector(config['seq_len']))
-        self.extraFeatures.add(Dense(1012))
-
-        self.sequence = Sequential()
-        self.sequence.add(Concatenate(axis=-1))
+        self.sequence.add(TimeDistributed(Flatten()))
         self.sequence.add(LSTM(512, dropout=0.3))
-        self.sequence.add(Dense(512))
-        self.sequence.add(Dense(len(target_time_offsets)))
+        self.sequence.add(Dense(128))
+
+        self.extraFeatures = Sequential()
+        self.extraFeatures.add(Dense(128))
+        self.extraFeatures.add(Dense(128))
+
+        self.last = Sequential()
+        self.last.add(Add())
+        self.last.add(Dense(128))
+        self.last.add(Dense(len(target_time_offsets)))
 
         return self
 
@@ -109,7 +111,7 @@ class LRCNModel(BaseModel):
         return model
 
     def call(self, inputs):
-        images = self.conv2DPipe(inputs['images'])
+        images = self.sequence(inputs['images'])
         clearsky = self.extraFeatures(inputs['clearsky'])
 
-        return self.sequence([images, clearsky])
+        return self.last([images, clearsky])
