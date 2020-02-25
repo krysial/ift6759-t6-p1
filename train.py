@@ -8,6 +8,7 @@ import time
 import tensorflow as tf
 import numpy as np
 import functools
+import hashlib
 
 from tensorflow.keras.callbacks import TensorBoard,\
     ModelCheckpoint, \
@@ -39,7 +40,12 @@ def main(
         user_config = {}
     user_config.update(vars(config))
 
+    fingerprint = hashlib.md5(
+        '.'.join([str(user_config[c]) for c in user_config]).encode("utf-8")
+    ).hexdigest()
+    fingerprint = fingerprint + '_' + os.environ['SLURM_JOB_ID']
     print(user_config)
+    print(fingerprint)
 
     assert os.path.isfile(admin_config_path), f"invalid admin config file: {admin_config_path}"
     with open(admin_config_path, "r") as fd:
@@ -127,7 +133,7 @@ def main(
     checkpointer = ModelCheckpoint(
         filepath=os.path.join(
             user_config['checkpoint_path'],
-            model_id + ".h5"
+            fingerprint + '.' + model_id + ".h5"
         ),
         verbose=1,
         save_best_only=True
@@ -166,9 +172,9 @@ def main(
         epochs=user_config['epoch'],
         use_multiprocessing=True,
         workers=32,
-        callbacks=[tb, csv_logger],
+        callbacks=[tb, csv_logger, checkpointer, early_stopper],
         steps_per_epoch=STEPS_PER_EPOCH // 16,
-        validation_steps=VALIDATION_STEPS,
+        validation_steps=VALIDATION_STEPS // 4,
         validation_data=val_data_loader
     )
 
