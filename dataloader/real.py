@@ -38,9 +38,9 @@ def create_data_generator(
             filtered_df = []
             while len(filtered_df) < config['batch_size']:
                 sample = dataframe.sample()
-                index = sample.index
+                index = sample.index.values[0]
                 row = sample.iloc[0]
-                
+
                 if row['BND_DAYTIME'] == 1 and 'BND' in station:
                     filtered_df.append((index, [*station].index('BND')))
                 if row['TBL_DAYTIME'] == 1 and 'TBL' in station:
