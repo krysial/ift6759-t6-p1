@@ -81,7 +81,7 @@ def prepare_model(
         model.compile(
             loss='mean_squared_error',
             optimizer=optimizer,
-            # metrics=[scaled_rmse],
+            metrics=[scaled_rmse],
         )
 
     return model
