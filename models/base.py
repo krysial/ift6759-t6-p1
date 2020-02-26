@@ -21,4 +21,3 @@ class BaseModel(tf.keras.Model):
             include_optimizer=True,
             save_format='tf',
         )
-
