@@ -43,7 +43,7 @@ class LRCNModel(BaseModel):
             )
         )
         self.sequence.add(TimeDistributed(BatchNormalization()))
-        self.sequence.add(TimeDistributed(Activation('relu')))
+        self.sequence.add(TimeDistributed(Activation('tanh')))
         self.sequence.add(
             TimeDistributed(
                 Conv2D(
@@ -53,7 +53,7 @@ class LRCNModel(BaseModel):
             )
         )
         self.sequence.add(TimeDistributed(BatchNormalization()))
-        self.sequence.add(TimeDistributed(Activation('relu')))
+        self.sequence.add(TimeDistributed(Activation('tanh')))
         self.sequence.add(
             TimeDistributed(
                 MaxPooling2D((2, 2), strides=(2, 2))
@@ -69,7 +69,8 @@ class LRCNModel(BaseModel):
         # LSTM output head
         self.sequence.add(Flatten())
         # self.sequence.add(LSTM(512, dropout=0.3))
-        self.sequence.add(Dense(1048))
+        self.sequence.add(Dense(512, activation='linear'))
+        self.sequence.add(Dense(512, activation='linear'))
         # self.sequence.add(Dense(512))
         # self.sequence.add(Dense(512))
         self.sequence.add(Dense(len(target_time_offsets)))
@@ -90,7 +91,7 @@ class LRCNModel(BaseModel):
             )
         )
         model.add(TimeDistributed(BatchNormalization()))
-        model.add(TimeDistributed(Activation('relu')))
+        model.add(TimeDistributed(Activation('tanh')))
         # conv
         model.add(
             TimeDistributed(
@@ -102,7 +103,7 @@ class LRCNModel(BaseModel):
             )
         )
         model.add(TimeDistributed(BatchNormalization()))
-        model.add(TimeDistributed(Activation('relu')))
+        model.add(TimeDistributed(Activation('tanh')))
         # max pool
         model.add(TimeDistributed(MaxPooling2D((2, 2), strides=(2, 2))))
 
