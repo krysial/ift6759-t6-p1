@@ -12,3 +12,13 @@ class BaseModel(tf.keras.Model):
         config: typing.Dict[typing.AnyStr, typing.Any]
     ):
         raise NotImplementedError("Should have implemented this")
+
+    def save_weights(self, filepath, overwrite=True, save_format=None):
+        # Because ModelCheckpointer set_model method overrides the save_weights_only flag
+        super().save(
+            filepath=filepath,
+            overwrite=overwrite,
+            include_optimizer=True,
+            save_format='tf',
+        )
+

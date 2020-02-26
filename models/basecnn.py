@@ -5,6 +5,8 @@ import tensorflow as tf
 from tensorflow.keras.layers import *
 from tensorflow.keras.models import *
 
+from models.base import BaseModel
+
 
 def stack_seq(x):
     x_t = tf.transpose(x, [0, 2, 3, 1, 4])
@@ -17,7 +19,7 @@ def stack_seq_shape(input_shape):
     return tuple(-1, input_shape[2], input_shape[0] * input_shape[3])
 
 
-class BaseCNNModel(tf.keras.Model):
+class BaseCNNModel(BaseModel):
     @classmethod
     def create(
         cls,
@@ -28,10 +30,12 @@ class BaseCNNModel(tf.keras.Model):
         self = cls()
         self.cnn_model = Sequential([
             Lambda(stack_seq, output_shape=stack_seq_shape),
-            Conv2D(64, 5, strides=1, activation="relu"),
-            Conv2D(64, 5, strides=1, activation="relu"),
+            Conv2D(32, 5, strides=1),
+            Conv2D(32, 5, strides=1),
+            BatchNormalization(),
             MaxPool2D(pool_size=2, strides=2),
-            Conv2D(128, 3, strides=(1, 1), activation="relu"),
+            Conv2D(128, 3, strides=(1, 1)),
+            BatchNormalization(),
             MaxPool2D(pool_size=2, strides=2),
             Flatten(),
             Dense(units=512, activation="relu"),
@@ -40,5 +44,5 @@ class BaseCNNModel(tf.keras.Model):
 
         return self
 
-    def call(self, inputs):
+    def call(self, inputs, training=None):
         return self.cnn_model(inputs['images'])

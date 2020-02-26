@@ -30,12 +30,11 @@ def prepare_model_eval(
         target_time_offsets: typing.List[datetime.timedelta],
         config: typing.Dict[typing.AnyStr, typing.Any],
 ) -> tf.keras.Model:
-    return tf.keras.models.load_model(
-        os.path.join(
-            config['checkpoint_path'],
-            config['model_id'] + ".h5"
-        )
-    )
+    model_path = os.path.join(config['checkpoint_path'], config['model_id'] + ".tf/")
+    assert os.path.exists(model_path), f"No model found in path:{model_path}"
+    model = tf.keras.models.load_model(model_path)
+
+    return model
 
 
 def prepare_model(
@@ -82,7 +81,7 @@ def prepare_model(
         model.compile(
             loss='mean_squared_error',
             optimizer=optimizer,
-            metrics=[scaled_rmse],
+            # metrics=[scaled_rmse],
         )
 
     return model

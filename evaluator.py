@@ -10,7 +10,7 @@ import tensorflow as tf
 import tqdm
 
 from dataloader.dataloader import prepare_dataloader as prepare_dataloader_t06
-from models import prepare_model as prepare_model_eval
+from models import prepare_model, prepare_model_eval
 from utils.rescale_GHI import rescale_GHI
 
 

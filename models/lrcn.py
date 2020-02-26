@@ -108,7 +108,7 @@ class LRCNModel(BaseModel):
 
         return model
 
-    def call(self, inputs):
+    def call(self, inputs, training=None):
         images = self.conv2DPipe(inputs['images'])
         clearsky = self.extraFeatures(inputs['clearsky'])
 
