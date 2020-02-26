@@ -32,7 +32,7 @@ def prepare_model_eval(
 ) -> tf.keras.Model:
     model_path = os.path.join(config['checkpoint_path'], config['model_id'] + ".tf/")
     assert os.path.exists(model_path), f"No model found in path:{model_path}"
-    model = tf.keras.models.load_model(model_path, custom_objects={'scaled_rmse':scaled_rmse})
+    model = tf.keras.models.load_model(model_path, custom_objects={'scaled_rmse': scaled_rmse})
 
     return model
 
