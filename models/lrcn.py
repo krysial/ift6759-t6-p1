@@ -72,6 +72,7 @@ class LRCNModel(BaseModel):
         self.sequence.add(Dense(512, activation='linear'))
         self.sequence.add(Dense(512, activation='linear'))
         self.sequence.add(Dense(512, activation='linear'))
+        self.sequence.add(BatchNormalization())
         # self.sequence.add(Dense(512))
         self.sequence.add(Dense(len(target_time_offsets)))
 
