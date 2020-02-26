@@ -5,7 +5,7 @@ import tensorflow as tf
 
 from utils.time_distributed import TimeDistributed
 
-from tensorflow.keras.layers import Dense, Flatten, Dropout, ZeroPadding3D, Add
+from tensorflow.keras.layers import Dense, Flatten, Dropout, ZeroPadding3D, Add, Input
 from tensorflow.keras.layers import LSTM
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.optimizers import Adam, RMSprop
@@ -69,16 +69,10 @@ class LRCNModel(BaseModel):
         # LSTM output head
         self.sequence.add(TimeDistributed(Flatten()))
         self.sequence.add(LSTM(512, dropout=0.3))
-        self.sequence.add(Dense(128))
+        self.sequence.add(Dense(512))
+        self.sequence.add(Dense(len(target_time_offsets)))
 
-        self.extraFeatures = Sequential()
-        self.extraFeatures.add(Dense(128))
-        self.extraFeatures.add(Dense(128))
-
-        self.last = Sequential()
-        self.last.add(Add())
-        self.last.add(Dense(128))
-        self.last.add(Dense(len(target_time_offsets)))
+        self.last = Add()
 
         return self
 
@@ -112,6 +106,6 @@ class LRCNModel(BaseModel):
 
     def call(self, inputs):
         images = self.sequence(inputs['images'])
-        clearsky = self.extraFeatures(inputs['clearsky'])
+        clearsky = inputs['clearsky']
 
         return self.last([images, clearsky])

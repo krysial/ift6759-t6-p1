@@ -40,10 +40,7 @@ def main(
         user_config = {}
     user_config.update(vars(config))
 
-    fingerprint = hashlib.md5(
-        '.'.join([str(user_config[c]) for c in user_config]).encode("utf-8")
-    ).hexdigest()
-    fingerprint = fingerprint + '_' + os.environ['SLURM_JOB_ID']
+    fingerprint = 'slurm_job_' + os.environ['SLURM_JOB_ID'] if 'SLURM_JOB_ID' in os.environ else 'FAKE_JOB_ID '
     print(user_config)
     print(fingerprint)
 

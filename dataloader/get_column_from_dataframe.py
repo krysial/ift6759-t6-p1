@@ -29,14 +29,12 @@ def get_column_from_dataframe(
     """
     new_config = copy(config)
     new_config['target_name'] = column
-    new_config['target_past_len'] = config['seq_len']
-    new_config['target_past_interval'] = config['input_past_interval']
-    new_offset = [copy(offsets)[0]]
+    new_config['target_past_len'] = 1
     COLUMN = get_GHI_targets(
         df,
         datetimes,
         station,
-        new_offset,
+        offsets,
         new_config
     )
     return COLUMN
