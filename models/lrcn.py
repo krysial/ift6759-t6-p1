@@ -62,7 +62,7 @@ class LRCNModel(BaseModel):
 
         # 2nd-5th (default) blocks
         self.sequence = self.add_default_block(self.sequence, 32, init=initialiser, reg_lambda=reg_lambda)
-        # self.sequence = self.add_default_block(self.sequence, 128, init=initialiser, reg_lambda=reg_lambda)
+        self.sequence = self.add_default_block(self.sequence, 128, init=initialiser, reg_lambda=reg_lambda)
         # self.sequence = self.add_default_block(self.sequence, 256, init=initialiser, reg_lambda=reg_lambda)
         # self.sequence = self.add_default_block(self.sequence, 512, init=initialiser, reg_lambda=reg_lambda)
 
