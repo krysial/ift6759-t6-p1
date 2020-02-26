@@ -140,7 +140,7 @@ def main(
         log_dir=os.path.join(
             'results',
             'logs',
-            model_id
+            fingerprint + '.' + model_id
         ),
         histogram_freq=1,
         write_graph=True,

@@ -37,7 +37,7 @@ class LRCNModel(BaseModel):
                 Conv2D(
                     32, (8, 8), padding='same',
                     kernel_initializer=initialiser,
-                    kernel_regularizer=l2(reg_lambda)
+                    # kernel_regularizer=l2(reg_lambda)
                 ),
                 input_shape=(config['seq_len'], config['crop_size'], config['crop_size'], len(config['channels']))
             )
@@ -48,7 +48,7 @@ class LRCNModel(BaseModel):
             TimeDistributed(
                 Conv2D(
                     32, (3, 3), kernel_initializer=initialiser,
-                    kernel_regularizer=l2(reg_lambda)
+                    # kernel_regularizer=l2(reg_lambda)
                 )
             )
         )
@@ -62,14 +62,16 @@ class LRCNModel(BaseModel):
 
         # 2nd-5th (default) blocks
         self.sequence = self.add_default_block(self.sequence, 32, init=initialiser, reg_lambda=reg_lambda)
-        self.sequence = self.add_default_block(self.sequence, 128, init=initialiser, reg_lambda=reg_lambda)
+        # self.sequence = self.add_default_block(self.sequence, 128, init=initialiser, reg_lambda=reg_lambda)
         # self.sequence = self.add_default_block(self.sequence, 256, init=initialiser, reg_lambda=reg_lambda)
         # self.sequence = self.add_default_block(self.sequence, 512, init=initialiser, reg_lambda=reg_lambda)
 
         # LSTM output head
-        self.sequence.add(TimeDistributed(Flatten()))
-        self.sequence.add(LSTM(512, dropout=0.3))
-        self.sequence.add(Dense(512))
+        self.sequence.add(Flatten())
+        # self.sequence.add(LSTM(512, dropout=0.3))
+        self.sequence.add(Dense(1048))
+        # self.sequence.add(Dense(512))
+        # self.sequence.add(Dense(512))
         self.sequence.add(Dense(len(target_time_offsets)))
 
         self.last = Add()
@@ -82,7 +84,8 @@ class LRCNModel(BaseModel):
             TimeDistributed(
                 Conv2D(
                     kernel_filters, (3, 3), padding='same',
-                    kernel_initializer=init, kernel_regularizer=l2(reg_lambda)
+                    kernel_initializer=init,
+                    # kernel_regularizer=l2(reg_lambda)
                 )
             )
         )
@@ -93,7 +96,8 @@ class LRCNModel(BaseModel):
             TimeDistributed(
                 Conv2D(
                     kernel_filters, (3, 3), padding='same',
-                    kernel_initializer=init, kernel_regularizer=l2(reg_lambda)
+                    kernel_initializer=init,
+                    # kernel_regularizer=l2(reg_lambda)
                 )
             )
         )

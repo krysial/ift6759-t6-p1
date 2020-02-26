@@ -78,7 +78,11 @@ def prepare_model(
             den = tf.math.reduce_sum(tf.math.multiply(tf.math.square(y_true - tf.reduce_mean(y_true, axis=0)), tf.math.square(y_pred - tf.reduce_mean(y_pred, axis=0))))
             return tf.math.reduce_mean(num / den)
 
-        optimizer = Adadelta(lr=config['learning_rate'])
+        if config['optimizer'] == 'Adadelta':
+            optimizer = Adadelta(lr=config['learning_rate'])
+        if config['optimizer'] == 'Adam':
+            optimizer = Adam(lr=config['learning_rate'], decay=config['decay_rate'])
+
         model.compile(
             loss='mean_squared_error',
             optimizer=optimizer,

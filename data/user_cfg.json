@@ -16,7 +16,8 @@
     "real": true,
     "checkpoint_path": "/project/cq-training-1/project1/teams/team06/checkpoints",
     "model_id": "convlstm-mahmoud-02-24-2020-clearsky-60-interval-scaled-rmse",
-    "learning_rate": 1e-2,
-    "decay_rate": 1e-4,
+    "learning_rate": 1e-3,
+    "decay_rate": 1e-5,
+    "optimizer": "Adam",
     "input_past_interval": 60
 }
