@@ -101,7 +101,7 @@ def main(
 
     if user_config['real']:
         # real dataloader is expecting a Dict {} object in evaluation
-        prepare_dataloader = real_prepare_dataloader.prepare_dataloader
+        prepare_dataloader = real_prepare_dataloader.prepare_dataloader_train
     else:
         # load synthetic data
         prepare_dataloader = synthetic_dataloader.prepare_dataloader
