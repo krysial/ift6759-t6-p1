@@ -29,7 +29,7 @@ class LRCNModel(BaseModel):
         self = cls()
 
         initialiser = 'glorot_uniform'
-        reg_lambda = 0.001
+        reg_lambda = 0.1
 
         self.sequence = Sequential()
         self.sequence.add(
