@@ -24,6 +24,7 @@ models = {
     "se_res_bilrcn": SE_Residual_BiLRCNModel,
 }
 
+
 # metrics
 def scaled_rmse(y_true, y_pred):
     y_true_ = (y_true * 470.059048) + 297.487143
