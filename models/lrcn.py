@@ -29,7 +29,7 @@ class LRCNModel(BaseModel):
         self = cls()
 
         initialiser = 'glorot_uniform'
-        reg_lambda = 0.1
+        reg_lambda = 0.2
 
         self.sequence = Sequential()
         self.sequence.add(
@@ -63,15 +63,15 @@ class LRCNModel(BaseModel):
         # 2nd-5th (default) blocks
         self.sequence = self.add_default_block(self.sequence, 32, init=initialiser, reg_lambda=reg_lambda)
         self.sequence = self.add_default_block(self.sequence, 128, init=initialiser, reg_lambda=reg_lambda)
-        # self.sequence = self.add_default_block(self.sequence, 256, init=initialiser, reg_lambda=reg_lambda)
+        self.sequence = self.add_default_block(self.sequence, 256, init=initialiser, reg_lambda=reg_lambda)
         # self.sequence = self.add_default_block(self.sequence, 512, init=initialiser, reg_lambda=reg_lambda)
 
         # LSTM output head
         self.sequence.add(Flatten())
         # self.sequence.add(LSTM(512, dropout=0.3))
-        self.sequence.add(Dense(512, activation='linear'))
-        self.sequence.add(Dense(512, activation='linear'))
-        self.sequence.add(Dense(512, activation='linear'))
+        self.sequence.add(Dense(1024, activation='linear'))
+        self.sequence.add(Dense(1024, activation='linear'))
+        self.sequence.add(Dense(1024, activation='linear'))
         self.sequence.add(BatchNormalization())
         # self.sequence.add(Dense(512))
         self.sequence.add(Dense(len(target_time_offsets)))
