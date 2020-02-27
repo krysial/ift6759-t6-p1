@@ -39,7 +39,7 @@ def stations_px():
 
 @pytest.fixture
 def data(config):
-    img = tf.random.uniform((config['seq_len'], len(config['channels']), 650, 1500))
+    img = tf.random.uniform((config['batch_size'], config['seq_len'], len(config['channels']), config['crop_size'], config['crop_size']))
     return {'images': img}
 
 
@@ -86,7 +86,7 @@ def test_equal_seqlen_input_to_output(data, target, stations_px, station, config
 def test_equal_channel_input_to_output(data, target, stations_px, station, config):
     n_data, tgt = dataset_processing(stations_px, station, config)(data.copy(), target)
     img = n_data['images']
-    assert (data['images'].shape[1] == img.shape[-1])
+    assert (data['images'].shape[0] == img.shape[0])
 
 
 def test_img_nan_generation_in_process(data, target, stations_px, station, config):

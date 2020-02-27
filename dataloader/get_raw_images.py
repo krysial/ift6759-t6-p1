@@ -75,7 +75,7 @@ def get_frames_location(dataframe, datetimes, seqs, dataset, config):
     offset = config['input_past_interval']
     dt_seqs = []
 
-    for i, datetime in enumerate(datetimes):
+    for i, (datetime, station_id) in enumerate(datetimes):
         for j in range(seqs):
             dt_seqs.append({
                 'datetime': datetime - dt.timedelta(minutes=(offset * j)),

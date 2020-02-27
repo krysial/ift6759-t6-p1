@@ -30,12 +30,11 @@ def dataset_processing(
         px_x = center[0] + px_offset
         px_y_ = center[1] - px_offset
         px_y = center[1] + px_offset
-        return image_tensor[:, :, px_y_:px_y, px_x_:px_x]
+        return image_tensor[:, :, :, px_y_:px_y, px_x_:px_x]
 
     def processor(data, target_tensor):
         # Updated image tensor
         data['images'] = crop(data['images'], list(station.keys())[0])
-        data['images'] = tf.transpose(data['images'], [0, 2, 3, 1])
         return data, target_tensor
 
     return processor

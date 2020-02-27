@@ -101,7 +101,7 @@ def main(
 
     if user_config['real']:
         # real dataloader is expecting a Dict {} object in evaluation
-        prepare_dataloader = real_prepare_dataloader.prepare_dataloader
+        prepare_dataloader = real_prepare_dataloader.prepare_dataloader_train
     else:
         # load synthetic data
         prepare_dataloader = synthetic_dataloader.prepare_dataloader
@@ -127,10 +127,11 @@ def main(
     checkpointer = ModelCheckpoint(
         filepath=os.path.join(
             user_config['checkpoint_path'],
-            model_id + ".h5"
+            model_id + ".tf/"
         ),
         verbose=1,
-        save_best_only=True
+        save_best_only=True,
+        save_weights_only=False
     )
 
     tb = TensorBoard(
@@ -166,12 +167,11 @@ def main(
         epochs=user_config['epoch'],
         use_multiprocessing=True,
         workers=32,
-        callbacks=[tb, csv_logger],
+        callbacks=[tb, csv_logger, checkpointer],
         steps_per_epoch=STEPS_PER_EPOCH // 16,
         validation_steps=VALIDATION_STEPS,
         validation_data=val_data_loader
     )
-
     print(model.summary())
 
 

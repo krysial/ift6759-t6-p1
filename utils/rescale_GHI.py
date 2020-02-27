@@ -17,5 +17,5 @@ def rescale_GHI(target_GHI):
     quantile_diff_station_GHI = 470.059048
     target_GHI_ = (target_GHI * quantile_diff_station_GHI) + median_station_GHI
     assert target_GHI_.shape == target_GHI.shape
-    assert target_GHI_.ndims == target_GHI.ndims
+    assert target_GHI_.ndim == target_GHI.ndim
     return target_GHI_

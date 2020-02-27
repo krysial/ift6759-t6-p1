@@ -125,5 +125,5 @@ class ConvLSTMModel(BaseModel):
         self.model = Model([img_in, clearsky_in], o)
         return self
 
-    def call(self, inputs):
+    def call(self, inputs, training=None):
         return self.model([inputs['images'], inputs['clearsky']])
