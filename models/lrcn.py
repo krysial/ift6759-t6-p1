@@ -37,7 +37,7 @@ class LRCNModel(BaseModel):
                 Conv2D(
                     32, (8, 8), padding='same',
                     kernel_initializer=initialiser,
-                    # kernel_regularizer=l2(reg_lambda)
+                    kernel_regularizer=l2(reg_lambda)
                 ),
                 input_shape=(config['seq_len'], config['crop_size'], config['crop_size'], len(config['channels']))
             )
@@ -48,7 +48,7 @@ class LRCNModel(BaseModel):
             TimeDistributed(
                 Conv2D(
                     32, (3, 3), kernel_initializer=initialiser,
-                    # kernel_regularizer=l2(reg_lambda)
+                    kernel_regularizer=l2(reg_lambda)
                 )
             )
         )
@@ -87,7 +87,7 @@ class LRCNModel(BaseModel):
                 Conv2D(
                     kernel_filters, (3, 3), padding='same',
                     kernel_initializer=init,
-                    # kernel_regularizer=l2(reg_lambda)
+                    kernel_regularizer=l2(reg_lambda)
                 )
             )
         )
@@ -99,7 +99,7 @@ class LRCNModel(BaseModel):
                 Conv2D(
                     kernel_filters, (3, 3), padding='same',
                     kernel_initializer=init,
-                    # kernel_regularizer=l2(reg_lambda)
+                    kernel_regularizer=l2(reg_lambda)
                 )
             )
         )
