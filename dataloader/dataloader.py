@@ -8,8 +8,43 @@ import typing
 
 from dataloader.get_crop_size import get_crop_size
 from dataloader.dataset_processing import *
-from dataloader.real import create_data_generator
+from dataloader.real import create_data_generator, create_data_generator_train
 from dataloader.get_station_px_center import get_station_px_center
+
+
+def prepare_dataloader_train(
+        dataframe: pd.DataFrame,
+        target_datetimes: typing.List[datetime.datetime],
+        station: typing.Dict[typing.AnyStr, typing.Tuple[float, float, float]],
+        target_time_offsets: typing.List[datetime.timedelta],
+        config: typing.Dict[typing.AnyStr, typing.Any]) -> tf.data.Dataset:
+
+    generator = create_data_generator_train(
+        dataframe=dataframe,
+        target_datetimes=target_datetimes,
+        station=station,
+        target_time_offsets=target_time_offsets,
+        config=config
+    )
+
+    # output_shapes = (seq_len, channels, height, width)
+    data_loader = tf.data.Dataset.from_generator(
+        generator, ({
+            'images': tf.float32,
+            'clearsky': tf.float32,
+        }, tf.float32)
+    )
+
+    # Ankur not sure abou the below. Repeat is a hack, we need to see what's wrong
+
+    data_loader = data_loader.map(transposing, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+    data_loader = data_loader.repeat()
+
+    data_loader = data_loader.map(normalize_station_GHI, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+    data_loader = data_loader.map(normalize_CLEARSKY_GHI, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+
+    # Final step of data loading pipeline: Return the dataset loading object
+    return data_loader
 
 
 def prepare_dataloader(
@@ -51,13 +86,21 @@ def prepare_dataloader(
         }, tf.float32)
     )
 
-    # Ankur not sure abou the below. Repeat is a hack, we need to see what's wrong
+    # Second step: Estimate/Calculate station
+    # coordinates on image and crop area dimensions
+    stations_px = get_station_px_center(dataframe, station)
+    if config['crop_size'] is None or config['crop_size'] == 0:
+        config['crop_size'] = get_crop_size(stations_px, data_loader)
 
+    # Third step: Processing using map (cropping for stations)
+    crop_image_fn = dataset_processing(
+        stations_px=stations_px,
+        station=station,
+        config=config
+    )
+
+    data_loader = data_loader.map(crop_image_fn, num_parallel_calls=tf.data.experimental.AUTOTUNE)
     data_loader = data_loader.map(transposing, num_parallel_calls=tf.data.experimental.AUTOTUNE)
-    data_loader = data_loader.repeat()
-    # if config['crop_size'] != 80:
-    #     cropper = presaved_crop(config=config)
-    #     data_loader = data_loader.map(cropper, num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
     data_loader = data_loader.map(normalize_station_GHI, num_parallel_calls=tf.data.experimental.AUTOTUNE)
     data_loader = data_loader.map(normalize_CLEARSKY_GHI, num_parallel_calls=tf.data.experimental.AUTOTUNE)

@@ -25,7 +25,7 @@ def catalog():
 
 
 def test_tensor_output_shape(catalog):
-    batch_of_datetimes = [dt.datetime.strptime(i, DT_FORMAT) for i in app_config['target_datetimes']]
+    batch_of_datetimes = [(dt.datetime.strptime(i, DT_FORMAT), 0) for i in app_config['target_datetimes']]
 
     catalog.loc[:, 'hdf5_16bit_path'] = h5_test_file  # replacing real path for local file path
     output_tensor = get_raw_images.get_raw_images(catalog, batch_of_datetimes, app_config)
