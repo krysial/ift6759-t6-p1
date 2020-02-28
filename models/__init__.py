@@ -56,9 +56,32 @@ def prepare_model_eval(
         target_time_offsets: typing.List[datetime.timedelta],
         config: typing.Dict[typing.AnyStr, typing.Any],
 ) -> tf.keras.Model:
-    model_path = os.path.join(config['checkpoint_path'], config['model_id'] + ".tf/")
-    assert os.path.exists(model_path), f"No model found in path:{model_path}"
-    model = tf.keras.models.load_model(model_path, custom_objects={'scaled_rmse': scaled_rmse}, compile=False)
+    model = models[config['model']].create(
+        stations,
+        target_time_offsets,
+        config
+    )
+
+    images = np.zeros(
+        (1,
+            config['seq_len'],
+            config['crop_size'],
+            config['crop_size'],
+            len(config['channels']))
+    )
+
+    clearsky = np.zeros(
+        (1, len(target_time_offsets))
+    )
+
+    model({
+        'images': images,
+        'clearsky': clearsky
+    })
+
+    model.load_weights(
+        os.path.join(config['checkpoint_path'], config['model_id'] + ".hdf5")
+    )
 
     return model
 
@@ -68,25 +91,42 @@ def prepare_model(
         target_time_offsets: typing.List[datetime.timedelta],
         config: typing.Dict[typing.AnyStr, typing.Any],
 ) -> tf.keras.Model:
+    model = models[config['model']].create(
+        stations,
+        target_time_offsets,
+        config
+    )
+
+    images = np.zeros(
+        (1,
+            config['seq_len'],
+            config['crop_size'],
+            config['crop_size'],
+            len(config['channels']))
+    )
+    clearsky = np.zeros(
+        (1, len(target_time_offsets))
+    )
+
+    model({
+        'images': images,
+        'clearsky': clearsky
+    })
+
     if 'checkpoint_start' in config:
-        model = tf.keras.models.load_model(
-            os.path.join(
-                config['checkpoint_path'],
-                config['model_id'] + ".h5"
-            )
-        )
-    else:
-        model = models[config['model']].create(
-            stations,
-            target_time_offsets,
-            config
+        model.load_weights(
+            os.path.join(config['checkpoint_path'], config['model_id'] + ".h5")
         )
 
+    if config['optimizer'] == 'Adadelta':
         optimizer = Adadelta(lr=config['learning_rate'])
-        model.compile(
-            loss='mean_squared_error',
-            optimizer=optimizer,
-            metrics=[scaled_rmse],
-        )
+    if config['optimizer'] == 'Adam':
+        optimizer = Adam(lr=config['learning_rate'], decay=config['decay_rate'])
+
+    model.compile(
+        loss='mean_squared_error',
+        optimizer=optimizer,
+        metrics=[scaled_rmse],
+    )
 
     return model
