@@ -127,11 +127,12 @@ def main(
     checkpointer = ModelCheckpoint(
         filepath=os.path.join(
             user_config['checkpoint_path'],
-            model_id + ".tf/"
+            model_id + ".h5"
         ),
+        monitor='val_scaled_rmse',
         verbose=1,
         save_best_only=True,
-        save_weights_only=False
+        save_weights_only=True
     )
 
     tb = TensorBoard(
@@ -169,7 +170,7 @@ def main(
         workers=32,
         callbacks=[tb, csv_logger, checkpointer],
         steps_per_epoch=STEPS_PER_EPOCH // 16,
-        validation_steps=VALIDATION_STEPS,
+        validation_steps=VALIDATION_STEPS // 4,
         validation_data=val_data_loader
     )
     print(model.summary())
