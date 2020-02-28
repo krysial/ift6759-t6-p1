@@ -32,20 +32,21 @@ def create_data_generator(
     """
     def create_generator():
         def batch_datetimes():
-            for index, row in dataframe.iterrows():
-                if row['BND_DAYTIME'] == 1 and 'BND' in station:
+            for index in target_datetimes:
+                row = dataframe.loc[index]
+                if 'BND' in station:
                     yield [(index, [*station].index('BND'))]
-                if row['TBL_DAYTIME'] == 1 and 'TBL' in station:
+                if 'TBL' in station:
                     yield [(index, [*station].index('TBL'))]
-                if row['DRA_DAYTIME'] == 1 and 'DRA' in station:
+                if 'DRA' in station:
                     yield [(index, [*station].index('DRA'))]
-                if row['FPK_DAYTIME'] == 1 and 'FPK' in station:
+                if 'FPK' in station:
                     yield [(index, [*station].index('FPK'))]
-                if row['GWN_DAYTIME'] == 1 and 'GWN' in station:
+                if 'GWN' in station:
                     yield [(index, [*station].index('GWN'))]
-                if row['PSU_DAYTIME'] == 1 and 'PSU' in station:
+                if 'PSU' in station:
                     yield [(index, [*station].index('PSU'))]
-                if row['SXF_DAYTIME'] == 1 and 'SXF' in station:
+                if 'SXF' in station:
                     yield [(index, [*station].index('SXF'))]
 
         for batch in batch_datetimes():
